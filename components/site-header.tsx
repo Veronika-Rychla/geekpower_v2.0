@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { UserGreeting } from "@/components/user-greeting";
 
 export function SiteHeader() {
   return (
@@ -21,15 +22,12 @@ export function SiteHeader() {
           <Link href="#" className="transition-colors hover:text-foreground">
             Docs
           </Link>
-          <Link href="#" className="transition-colors hover:text-foreground">
-            Pricing
-          </Link>
         </nav>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm">
-            Sign up
-          </Button>
-          <Button size="sm">Log in</Button>
+        <div className="flex items-center gap-4">
+          <UserGreeting />
+          <div className="flex items-center gap-2">
+            <Button size="sm">Log out</Button>
+          </div>
         </div>
       </div>
     </header>

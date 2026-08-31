@@ -14,15 +14,20 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loginWithEmail } from "@/lib/actions";
+import { useUserStore } from "@/lib/store";
 
 const ADMIN_EMAIL = "admin@gmail.com";
 
 export function LoginForm() {
   const router = useRouter();
+  const setUser = useUserStore((state) => state.setUser);
   const [email, setEmail] = useState("");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const user = await loginWithEmail(email);
+    setUser(user);
     router.push(email === ADMIN_EMAIL ? "/admin-dashboard" : "/user-dashboard");
   }
 
