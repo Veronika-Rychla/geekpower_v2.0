@@ -18,6 +18,9 @@ export function SiteNav() {
       <Link href="#" className="transition-colors hover:text-foreground">
         Docs
       </Link>
+      <Link href="/lessons" className="transition-colors hover:text-foreground">
+        Lessons
+      </Link>
     </nav>
   );
 }

@@ -1,0 +1,42 @@
+---
+title: "Getting Started with Next.js"
+description: "A quick tour of the App Router and how this project is structured."
+---
+
+Welcome to your first lesson! Next.js's **App Router** organizes your app
+around folders in the `app` directory — each `page.tsx` file becomes a route.
+
+## What you'll learn
+
+- How routes map to folders
+- Server vs. Client Components
+- How this lesson itself is rendered
+
+## Server vs. Client Components
+
+Components are **Server Components** by default — they run on the server and
+never ship JS to the browser. Add `"use client"` at the top of a file when you
+need interactivity, like the quiz below.
+
+## Embedding media
+
+Lessons can embed native media directly:
+
+```mdx
+<video controls src="/lessons/example.mp4" />
+<audio controls src="/lessons/example.mp3" />
+```
+
+## Try it out
+
+<Quiz
+  question="What do you add to the top of a file to make it a Client Component?"
+  options={[
+    { label: "use client", correct: true },
+    { label: "use server" },
+    { label: "export const dynamic" },
+  ]}
+/>
+
+Nice work — that's the whole loop: markdown for content, real React components
+for interactivity, all rendered on the server.
