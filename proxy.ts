@@ -10,6 +10,10 @@ export default auth((req) => {
   if (!req.auth && !isPublic) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
+
+  if (req.auth && isPublic) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  }
 });
 
 export const config = {
