@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -14,21 +15,33 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginWithEmail } from "@/lib/actions";
-import { useUserStore } from "@/lib/store";
-
-const ADMIN_EMAIL = "admin@gmail.com";
 
 export function LoginForm() {
   const router = useRouter();
-  const setUser = useUserStore((state) => state.setUser);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const user = await loginWithEmail(email);
-    setUser(user);
-    router.push(email === ADMIN_EMAIL ? "/admin-dashboard" : "/user-dashboard");
+    setError(null);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (!result || result.error) {
+      setError("Invalid email or password");
+      return;
+    }
+
+    const session = await getSession();
+
+    router.push(
+      session?.user?.role === "admin" ? "/admin-dashboard" : "/user-dashboard",
+    );
   }
 
   return (
@@ -59,8 +72,15 @@ export function LoginForm() {
                 Forgot password?
               </Link>
             </div>
-            <Input id="password" type="password" placeholder="••••••••" />
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="mt-2 w-full">
             Log in
           </Button>

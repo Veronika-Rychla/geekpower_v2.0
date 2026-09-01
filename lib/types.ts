@@ -2,5 +2,6 @@ export interface User {
   guid: string;
   name: string;
   email: string;
-  type: "admin" | "user";
+  role: "admin" | "user";
+  password_hash: string;
 }

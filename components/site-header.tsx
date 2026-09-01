@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/components/logout-button";
 import { UserGreeting } from "@/components/user-greeting";
 
 export function SiteHeader() {
@@ -26,7 +26,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-4">
           <UserGreeting />
           <div className="flex items-center gap-2">
-            <Button size="sm">Log out</Button>
+            <LogoutButton />
           </div>
         </div>
       </div>

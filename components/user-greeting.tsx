@@ -1,9 +1,10 @@
 "use client";
 
-import { useUserStore } from "@/lib/store";
+import { useSession } from "next-auth/react";
 
 export function UserGreeting() {
-  const user = useUserStore((state) => state.user);
+  const { data: session } = useSession();
+  const user = session?.user;
 
   if (!user) {
     return null;
