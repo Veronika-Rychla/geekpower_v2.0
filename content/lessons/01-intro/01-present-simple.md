@@ -1,0 +1,69 @@
+## 📚 Present simple je opravdu simple!
+
+Nejspíš jste už ve spojitosti s ==present simple== – **přítomným časem prostým** – slyšeli o tom, že se používá pro **popis věcí a dějů, které jsou obecně pravdivé**.
+
+> [!info]- Opáčko tvoření present simple
+
+| Osoba | Pozitivum      | Zápor                            | Otázka             | Krátká odpověď                    |
+| ----- | -------------- | -------------------------------- | ------------------ | --------------------------------- |
+| I     | I code.        | I **do not (don't)** code.       | **Do** I code?     | Yes, I do. / No, I don't.         |
+| You   | You code.      | You **do not (don't)** code.     | **Do** you code?   | Yes, you do. / No, you don't.     |
+| He    | He code**s**.  | He **does not (doesn't)** code.  | **Does** he code?  | Yes, he does. / No, he doesn't.   |
+| She   | She code**s**. | She **does not (doesn't)** code. | **Does** she code? | Yes, she does. / No, she doesn't. |
+| It    | It code**s**.  | It **does not (doesn't)** code.  | **Does** it code?  | Yes, it does. / No, it doesn't.   |
+| We    | We code.       | We **do not (don't)** code.      | **Do** we code?    | Yes, we do. / No, we don't.       |
+| You   | You code.      | You **do not (don't)** code.     | **Do** you code?   | Yes, you do. / No, you don't.     |
+| They  | They code.     | They **do not (don't)** code.    | **Do** they code?  | Yes, they do. / No, they don't.   |
+
+> Nejčastější chybou je zapomínání koncovky **-s** ve třetí osobě jednotného čísla!
+> 🚫 She work in IT.
+> ✅ She works in IT.
+
+> The internet _connects_ computers and devices worldwide.
+> These devices _share_ information.
+> Data packets _travel_ through a network of routers and servers to reach their destination.
+> Web browsers _retrieve_ information from servers.
+> They _send_ requests and _receive_ responses so that users can access websites and online content.
+
+Funguje to opravdu jednoduše. Protože popisujeme, jak věci fungují v jejich principu, nemusíme vymýšlet žádné složitosti a tahat do toho minulosti či budoucnost. Internet se tak prostě choval, chová a chovat bude.
+
+> [!success] Proč je to dobrá zpráva?
+> Protože present simple se díky tomu používá v technické dokumentaci a také při vysvětlování zdánlivě složitých technických či vědeckých principů. Až tedy příště budete psát dokumentaci ke svému projektu nebo někomu něco vysvětlovat, už se toho nemusíte tolik děsit. Prostě si vzpomeňte na to, že vymýšlet komplikovaná gramatická souvětí se všemi možnými časy není třeba. **Keep it simple and use present simple!**
+>
+> 🚫 Water will boil at 100°C.
+> ✅ Water boils at 100°C.
+
+### A co v běžné konverzaci?
+
+Tady si můžete s klidem oprášit školní znalosti. Present simple v běžné denní konverzaci používáme nejčastěji ve spojení s příslovci četnosti jako always / often / usually / sometimes / never / every- / once a month / twice a week, které **vyjadřují opakované děje**. Ty jsou vlastně svým způsobem také obecně pravdivé. Pokud něco děláme opakovaně, je to náš způsob fungování.
+
+> We _always use_ JIRA at work to organise our tasks.
+> My colleague _often procrastinates_ and _finishes_ his work late.
+> We _usually have_ morning stand-ups at 9 o'clock.
+> I _never go_ to the office. I _work_ from home _every day_.
+> I _have_ a programming course _every_ Tuesday.
+
+A samozřejmě také když mluvíme o sobě a popisujeme **věci, které jsou stálé a nemají tendenci se měnit příliš často** jako třeba naše **záliby, hodnoty a osobnost**.
+
+> She _loves_ playing video games.
+> He _has_ extensive knowledge of JavaScript.
+> My colleague _is_ an introvert.
+
+### Jízdní řády a rozvrhy
+
+Možná vás napadla otázka, jak je s opakovanými ději, které se z našeho pohledu teprve stanou. Například pokud má vlak odjet v 10:30, vy stojíte na nádraží před desátou a čekáte na spoj. Z vašeho pohledu vlak sice přijede až za půl hodiny, tedy v budoucnosti, pro vlak samotný jde však o pravidelnou opakovanou činnost, a tak použijeme opět present simple.
+
+> The train to Brno _leaves_ at 6:30.
+> The newest episode of Game of Thrones _airs_ at 8 p.m.
+> I _have_ my English lessons with Veronika every Monday morning.
+
+Present simple je tedy také možné použít pro **vyjádření opakované budoucnosti**, což je další skvělá aplikace jednoduché gramatiky, kterou již znáte. Jen si dejte pozor, že musí jít o budoucnost, která je téměř doslova vytesaná do kamene nebo minimálně někde černá na bílém. I když... u těch vlaků člověk nikdy neví. 🚝
+
+> [!tip] Kolik má vlastně angličtina gramatických časů?
+> Nové studenty často zaskočí, když zjistí, že **angličtina má 12 gramatických časů**! To je úctyhodné číslo proti češtině, která má jen tři (plus dokonavost a nedokonavost). Ve skutečnosti se však v angličtině většina složitých časů objevuje jen minimálně. Co se týče četnosti použití, vede jednoznačně present simple a těsně za ním past simple. **Present simple se dokonce používá v 55% všech případů!** Present simple je nejen simple, ale hlavně useful!
+>
+> |         | Simple      | Continuous       | Perfect           | Perfect continuous      |
+> | ------- | ----------- | ---------------- | ----------------- | ----------------------- |
+> | Past    | I coded     | I was coding     | I had coded       | I had been coding       |
+> | Present | I code      | I am coding      | I have coded      | I have been coding      |
+> | Future  | I will code | I will be coding | I will have coded | I will have been coding |

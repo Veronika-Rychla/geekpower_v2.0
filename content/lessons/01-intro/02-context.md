@@ -1,0 +1,87 @@
+## 📑 Kontext je klíčový!
+
+Kontext hraje v angličtině zásadní roli při určování významu slov, protože mnoho slov může mít více než jeden význam. Jedním z takových slov je ==cache==. Význam tohoto slova se může výrazně lišit v závislosti na tom, jak a kde je použito. Pojďme se podívat na různé významy tohoto slova a jak kontext pomáhá k jejich rozlišení.
+
+> [!tip] Nová slovíčka se učte vždy v kontextu
+> Učení se slovíček v kontextu je nesmírně důležité, protože napomáhá hlubšímu porozumění a lepšímu zapamatování. Když se učíme slova izolovaně, často nepochopíme jejich skutečný význam a správné použití. Kontext nám ukazuje, jak se slova chovají ve větách a jak se mění jejich význam v různých situacích.
+
+### Třikrát cache
+
+Nejstarším významem slova cache je označení pro **skrytý úkryt** nebo **místo, kde jsou uloženy zásoby**. Pokud máte rádi Piráty z Karibiku, tak ve světě pirátů může znamenat místo, kde kapitán a jeho posádka ukryli svůj naloupený poklad, aby ho ochránili před nepřáteli.
+
+> The treasure map leads to Blackbeard's hidden cache on the deserted island.
+> We found a cache of supplies hidden in the cellar.
+> In No Man's Sky, you can find hidden caches on various planets.
+
+V technickém IT kontextu toto slovíčko označuje speciální typ paměti, která uchovává často používaná data, aby k nim bylo možné rychleji přistupovat. Kontext je zde pro pochopení správného významu opravdu klíčový. Naštěstí technické prostředí a zmínka o prohlížeči jasně naznačují, že se jedná o **počítačovou mezipaměť**.
+
+> The browser stores images in its cache to load websites faster.
+> The application uses a cache to store user data temporarily.
+
+Máte rádi **geocaching**? Vždyť ono je to vlastně jen moderní verze lovu pokladů za použití GPS technologie! V kontextu geocachingu je cache kontejner, který obsahuje logbook do kterého se nálezci mohou zapsat. Může také obsahovat drobné předměty k výměně. Geocaching tedy propojuje tradiční význam slova cache s outdoorovou zábavou.
+
+> We spent the afternoon geocaching and found three caches hidden in the park.
+
+![Caching](https://www.youtube.com/watch?v=6FyXURRVmR0)
+
+> [!NOTE]- Caching text
+> Have you ever had a problem with your computer and someone told you to fix it by clearing your browser cache or your DNS cache? Chances are you've heard of these, but what is a cache? Simply put, caching means storing frequently demanded things closer to those asking for it. And by doing that, you increase the access speed.
+>
+> The book "Algorithms to Live By" gives a simple explanation. Imagine you're doing research for writing a paper or making a video and that you need to consult a book from the library. You could go to the library every time you need a piece of information, but instead, you will most likely take the book home with you and put it on your desk for faster access. In this example, your desk became a cache. Instead of making round trips to the library, which would slow down your progress, you can now grab the book straight from your desk.
+>
+> You intuitively understand why caching is much faster, but also that it's more limited. You don't have as much space on your desk as the library has in its stacks. You can only keep a limited amount of books in your cache. More on that later! Let's first look at how caches are used in computers.
+>
+> For example, your web browser caches resources from frequently visited websites. The first time you visit YouTube.com, your browser knows nothing about it, so it downloads all of the resources that make up YouTube. The logo, icons, fonts, scripts and all the thumbnails. On subsequent visits, however, all of this can be retrieved from cache, making the webpage load much faster because your browser only needs to download newer content that it hasn't seen before. On YouTube, that might be only the thumbnails of videos uploaded after your last visit.
+>
+> In this case, your browser cache is storing internet resources on your local computer. It's much faster to retrieve them from your SSD or hard drive than to download them from the internet. This is also the reason why clearing your cache can fix certain problems. Sometimes, websites update their designs or scripts, but your browser will keep using the older versions in its cache.
+>
+> But it's not just browsers that have a cache. Modern devices have tons of caches. On the hardware side: processors, GPUs, hard drives, SSDs all have caches. This creates a memory hierarchy. At the top, you'll find the memory embedded in processors, which is super fast but very small. At the bottom, you'll find things like SSDs and hard drives, which have huge capacities but are very slow compared to what's at the top of this hierarchy.
+>
+> You find a similar structure in the library. Frequently checked out books might be kept in a small cabinet near the front desk, where it's super fast to retrieve them. Less popular books will be moved to the stacks. There's much more space there compared to the front desk, but it requires a bit of searching to find the book you're after. And finally, you'll have old books that are rarely checked out and moved to off-site storage. While this archive is probably the largest of all, it's also the slowest to access. It requires you to ask a staff member to retrieve them for you, potentially taking a few days.
+>
+> On the software side, caches are also everywhere: operating systems, browsers, DNS, databases and web servers all use caches. And every time for the same purpose: store data in fast memory so it can be retrieved quicker later on. But let's go back to the book cache on your desk. At some point, your desk will be filled up with books. So, what do you do when your cache is full? How do you determine which books or which items to keep in your cache and which to remove?
+>
+> This is called a cache eviction strategy. Instinctively, you might return the books that you haven't used in a while. This is called Least Recently Used or LRU for short, and it's an effective and easy to implement strategy. It does, however, require you to keep track of when items in your cache were last accessed, which does slow it down a tiny bit.
+>
+> Another eviction strategy is random replacement. This one is a bit weird as it doesn't try to be smart. Instead, when the cache full, it just removes a random item. While this does sound like a bad idea, in practice, it's actually not far off LRU and it's much simpler to implement. That's why it's used in small ARM processors to keep their designs simple.
+>
+> But what fascinated me the most about caching was that it was invented in 1965 by Maurice Wilkes, a British computer scientist. In his paper, he wrote that cache memory should automatically fill itself with data from a slower main memory to speed up subsequent requests. It's amazing to see that technologies invented over 55 years ago are still being used and perfected to this day.
+
+### Posunuté významy kam se podíváš
+
+Jazyky obecně nerady vynalézají nová slova. I když se tomu občas nedá vyhnout, tak kdykoli to jde sahá jazyk raději po tom, co se už běžně používá a dává to do nových kontextů. Významy se pak nevyhnutelně posouvají.
+
+| Slovíčko      | Původní význam            | IT význam                       |
+| ------------- | ------------------------- | ------------------------------- |
+| **bug**       | brouk                     | chyba v programu                |
+| **cookie**    | sušenka                   | malý soubor s údaji o uživateli |
+| **root**      | kořen                     | nejvyšší adresář                |
+| **shell**     | skořápka                  | příkazový interpret             |
+| **server**    | číšník, ten kdo obsluhuje | server                          |
+| **sandbox**   | pískoviště                | izolované prostředí             |
+| **clipboard** | podložka s klipem         | schránka                        |
+| **wizard**    | čaroděj                   | průvodce instalací              |
+
+> There was a _bug_ on the kitchen floor.
+> The developers fixed a _bug_ in the latest version of the app.
+>
+> Would you like a chocolate _cookie_?
+> This website uses _cookies_ to remember your preferences.
+>
+> The tree's _roots_ grow deep into the ground.
+> Save the file in the _root_ directory of the project.
+>
+> We found beautiful _shells_ on the beach.
+> Open a _shell_ and run the installation script.
+>
+> The _server_ brought us our drinks with a smile.
+> The website is down because the _server_ isn't responding.
+>
+> The children spent the afternoon playing in the _sandbox_.
+> Test the application in a _sandbox_ before deploying it.
+>
+> The nurse wrote my name on a _clipboard_.
+> Copy the text to the _clipboard_ and paste it into the document.
+>
+> The _wizard_ cast a powerful spell.
+> The setup _wizard_ will guide you through the installation process.

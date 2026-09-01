@@ -1,0 +1,172 @@
+## 📚 Present continuous je teď a tady
+
+Jak už samotný název prozrazuje, ==present continuous== – **přítomný čas průběhový** – se používá pro **děje, které se odehrávají v přítomném okamžiku**.
+
+🛠️ **be + sloveso s koncovkou -ing**
+
+> Right now, we _are debugging_ the app to fix the errors.
+> The QA team _is testing_ the latest software update this week.
+> Currently, they _are implementing_ new security protocols to protect against cyber attacks.
+
+### Činnosti ve stavu "rozdělanosti"
+
+Přítomný čas průběhový se zdá být velmi přímočarý a taky je. Je tu však jedna věc, nad kterou je třeba se zamyslet. Ve skutečnosti totiž děje vyjádřené tímto časem nemusí nutně probíhat v okamžiku, kdy o nich mluvíme. Můžeme jím vyjádřit i **stav rozdělanosti**.
+
+> Kolega se tě u kávovaru přátelsky ptá: "What _are_ you _watching_ right now?"
+> Ty odpovídáš: "I _am watching_ Game of Thrones."
+
+Pokud se místo práce neoddáváš bohulibé prokrastinaci, nejspíš ti dojde, že se na další epizodu Hry o trůny nekoukáš zrovna v daném okamžiku, kdy o tom s kolegou mluvíš. Jde však o činnost, kterou máš "rozdělanou," a tak o ní mluvíš v průběhu. Seriál máš zrovna "rozkoukaný." Stejně tak můžeme mít právě "rozečtenou" knihu.
+
+### Rozdělanost vs záliby
+
+Představme si situaci, kdy se s někým bavíme třeba o čtení knih, koukání na seriály nebo o práci. V závislosti na tom, jaký náš konverzační společník použije v otázce čas, se naše odpovědi budou výrazně lišit.
+
+💬 What do you read? → Jaký je tvůj oblíbený žánr či autor?
+💬 What are you reading? → Co máš právě teď rozečteno bez ohledu na tvou obvyklou preferenci?
+
+💬 What do you watch? → Jaký je tvůj oblíbený žánr? Máš oblíbený seriál či film?
+💬 What are you watching? → Co máš právě teď rozkoukáno bez ohledu na tvou obvyklou preferenci?
+
+💬 What games do you play? → Jaké videohry máš rád?
+💬 What game are you playing? → Jakou hru máš právě rozehranou?
+
+💬 What do you do? → Co máš za práci?
+💬 What are you doing? → Co právě teď děláš?
+
+### Když nám něco vadí
+
+Existuje jedna velmi specifická aplikace present continuous, která tak trochu odporuje poučce, že pokud je něco návyk nebo opakovaná činnost, vyjadřujeme ji prostřednictvím present simple. To samozřejmě stále platí – až na jednu nuanci! **Pokud vám vadí, co druhý dělá, i kdyby to dělal opakovaně, můžete své podráždění zdůraznit průběhem.** Tím opravdu dáte najevo iritaci.
+
+> You're constantly changing your mind.
+> You're always nagging me.
+> He's always offering me to help with my work.
+
+### Jak správně připojovat koncovku -ing
+
+Většina sloves nemá s koncovkou -ing žádný problém a prostě ji přidá na svůj konec.
+
+> work → working
+> read → reading
+> test → testing
+> track → tracking
+
+Pokud však sloveso má na konci -e, které se nevyslovuje, toto -e je odstraněno.
+
+> code → coding
+> write → writing
+> move → moving
+> make → making
+> take → taking
+> drive → driving
+> use → using
+> come → coming
+
+Je-li však koncovka -e vyslovována, zachovává se.
+
+> see → seeing
+> agree → agreeing
+
+Slovesa končící na -ie mění koncovku na -y.
+
+> lie → lying
+> die → dying
+> tie → tying
+
+Pokud má sloveso jen jednu slabiku, která se skládá ze samohlásky + souhlásky + samohlásky, poslední samohláska se zdvojuje.
+
+> run → running
+> sit → sitting
+> stop → stopping
+> swim → swimming
+> get → getting
+
+Pokud je však poslední písmeno **w, x,** nebo **y**, ke zdvojení nedochází.
+
+> snow → snowing
+> fix → fixing
+> play → playing
+
+🧠 V případě víceslabičných sloves se poslední souhláska zdvojuje jen tehdy, když důraz ve výslovnosti daného slova připadá na poslední slabiku.
+
+be**GIN** → beginning 🆚 **VI**sit → visiting
+
+> beˈgin → beginning
+> preˈfer → preferring
+> adˈmit → admitting
+> oˈccur → occurring
+
+| Koncovka                           | Pravidlo        | Příklad             |
+| ---------------------------------- | --------------- | ------------------- |
+| většina sloves                     | přidej **-ing** | work → working      |
+| tiché **-e**                       | vynech **e**    | move → moving       |
+| **-ee**, **-ye**, **-oe**          | ponech **e**    | see → seeing        |
+| **-ie**                            | změň na **y**   | lie → lying         |
+| souhláska + samohláska + souhláska | zdvoj           | run → running       |
+| důraz na poslední slabice          | zdvoj           | prefer → preferring |
+
+### Slovesa, která se často pletou
+
+**die** (zemřít) → dying (_ie → y_) → died
+
+> The only plant in our office is dying.
+> My computer died last month.
+
+**dye** (nabarvit) → dyeing (_ponech -e, protože koncovka je -ye_) → dyed
+
+> She's dyeing her hair blue.
+> She dyed her hair last week.
+
+**lie** (položit se) → lying → lay / lain
+
+> I often lie on the sofa.
+> I'm lying on the sofa.
+> Yesterday I lay on the sofa.
+> I have lain there all afternoon.
+
+**lay** (položit něco někde) → laying → laid
+
+> I always lay my books on the table.
+> I'm laying the book on the table.
+> Yesterday I laid the book there as well.
+> I have laid it down.
+
+## 📑 Přejímání slov z jiných jazyků
+
+Angličtina svou slovní zásobu adoptovala z mnoha různých jazyků. Díky historickým událostem a kulturním vlivům se do angličtiny dostaly tisíce slov z latiny, francouzštiny, germánských jazyků a mnoha dalších. Tento mix dělá angličtinu jedinečně flexibilní a bohatou na výrazy, které lze využít v různých oblastech, včetně IT a techniky.
+
+Jedním z hlavních zdrojů slovní zásoby v angličtině je latina. Mnoho technických a vědeckých termínů pochází právě z latiny. Například slova jako **computer** a **database** mají latinské kořeny. V době římské nadvlády v Británii (od 43 do 410 n. l.) byla latina dominantním jazykem, což vedlo k převzetí mnoha latinských slov do staré angličtiny. Mimo to byla latina středověkým jazykem vědy a církve, takže mnoho latinských slov bylo přijato později. Slova jako **legal**, **formula** nebo **factor** pocházejí z latiny.
+
+Mnoho slov, zejména slov týkajících se umění, filozofie a lékařství, pochází z řečtiny. Například slova **democracy**, **philosophy** a **chronology**. Řečtina je dalším důležitým zdrojem anglické slovní zásoby zejména v oblasti vědy. Slova jako **technology**, **algorithm** a **cybernetics** pocházejí z řečtiny.
+
+Francouzština měla také významný dopad na anglickou slovní zásobu, zejména po normanském dobytí Anglie v roce 1066. Mnoho právních, vojenských a kulinářských termínů v angličtině pochází z francouzštiny. V oblasti IT můžeme vidět francouzské vlivy ve slovech jako **software** a **interface**.
+
+Germánské jazyky, především staroangličtina a staronorština, tvoří kořenový základ anglické slovní zásoby. Slova jako **keyboard**, **mouse** a **server** mají germánské kořeny.
+
+> [!idea] Český původ slova robot
+> Slovo **robot** pochází z českého slova _robota_, které znamená nucenou práci nevolníků. Slovo bylo poprvé použito v roce _1920_ českým spisovatelem _Karlem Čapkem_ v jeho divadelní hře _R.U.R._ (Rossumovi univerzální roboti). V této hře Čapek představil umělé lidi, kteří měli nahradit práci lidí.
+>
+> Pojem rychle získal popularitu a byl přijat do mnoha jazyků, včetně angličtiny. Díky této hře se slovo robot rozšířilo a stalo se běžným termínem pro mechanické bytosti. Příběh adoptování slova robot je ukázkou toho, jak literatura a kultura mohou ovlivnit technický jazyk a terminologii na globální úrovni.
+
+## 🎧 Gremlini v tom nejsou
+
+Tento poslech tě provede procesem, který se odehrává uvnitř počítače při kliknutí myší. Je zaměřen na vysvětlení, jak různé komponenty počítače spolupracují, aby tvůj příkaz vykonaly. Přečti si text pečlivě a věnujte pozornost rolím, které hrají myš, základní vstupně-výstupní systém (BIOS), centrální procesorová jednotka (CPU) a paměťový subsystém.
+
+![Inside your computer](https://youtu.be/AkFi90lZmXA?si=Ybojstz0wZkZc_uJ)
+
+> 🔊 Do you remember when you first realized that your computer was more than just a monitor and keyboard? That between the mouse click and the video playing, there was something that captured your intention, understood it, and made it real? What is that something? Is it gremlins?
+>
+> Let's imagine that we can shrink down to the size of an electron and inject ourselves into a click of a mouse. If you took your mouse apart, you'd see that it's really a very simple machine. It has a couple buttons and a system for detecting motion and distance. You might have an optical mouse that makes these measurements with lights and sensors, but older ones did this with a hard rubber ball and some plastic wheels. Same concept.
+>
+> When you click the button on your mouse, it sends a message to the computer with information about its position. When your mouse click is received, it's handled by the basic input/output subsystem. This subsystem acts like the eyes and ears and mouth and hands of the computer. Basically, it provides a way for the computer to interact with its environment. But it also acts like a buffer to keep the CPU from being overwhelmed by distractions. In this case, the I/O subsystem decides that your mouse click is pretty important so it generates an interrupt to the CPU. "Hey, CPU! Got a click here."
+>
+> The CPU, or central processing unit, is the brains of the whole computer. Just like your brain doesn't take up your whole body, the CPU doesn't take up the whole computer, but it runs the show all the same. And the CPU's job, its whole job, is fetching instructions from memory and executing them. So, while you're typing, typing, typing, maybe really fast, like 60 words a minute, the CPU is fetching and executing billions of instructions a second.
+>
+> Yes, billions every second: instructions to move your mouse around on the screen, to run that clock widget on your desktop, play your internet radio, manage the files you're editing on the hard drive, and much, much more. Your computer's CPU is one heck of a multitasker! "But oh my gosh there's a very important mouse click coming through now! Let's drop everything now and deal with that!"
+>
+> There are programs for everything that the CPU does. A special program for the mouse, for the clock widget, for the internet radio, and for dealing with letters sent by the keyboard. Each program was initially written by a human in a human-readable programming language, like Java, C++ or Python.
+>
+> But human programs take up a lot of space and contain a lot of unnecessary information to a computer, so they are compiled and made smaller and stored in bits of ones and zeros in memory. The CPU realizes that it needs instructions for how to deal with this mouse click, so it looks up the address for the mouse program and sends a request to the memory subsystem for instructions stored there. Each instruction in the mouse device driver is duly fetched and executed.
+>
+> And that's not nearly the end of the story! Because the CPU learns that the mouse was clicked when the cursor was over a picture of a button on the monitor screen, and so, the CPU asks memory for the monitor program to find out what that button is. And then the CPU has to ask memory for the program for the button, which means that the CPU needs the monitor program again to show the video associated with the button and so it goes.
+>
+> And let's just say there are a lot of programs involved before you even see the button on the screen light up when you clicked it. So, just the simple task of clicking your mouse means visiting all of the critical components of your computer's architecture: peripherals, the basic input-output system, the CPU, programs, and memory and not one gremlin.

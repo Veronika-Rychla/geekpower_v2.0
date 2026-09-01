@@ -1,0 +1,37 @@
+## 🎧 What is the World Wide Web?
+
+Při sledování tohoto videa se zaměř na pochopení rozdílu mezi internetem a World Wide Webem. Zaměř se na metaforu, která popisuje webové servery jako mrakodrapy, a na roli webových hostitelů. Věnuj také pozornost významu webových adres a jak prohlížeče převádějí kód do grafického rozhraní, které vidíme na obrazovkách. Zamysli se nad tím, jak je struktura webu propojena s tím, jak fungují naše mozky.
+
+> [!tip] Je třeba rozumět při poslechu všemu?
+> Ne, není! 🎉Pokud si umíš odvodit neznámá slovíčka z kontextu nebo jde o vatová slova, která nepřispívají významu sdělení, pak jsi v pohodě. Není tedy vůbec třeba se zbytečně stresovat nad tím, že nerozumíš úplně všemu.
+
+![What is the World Wide Web?](https://www.youtube.com/watch?v=J8hzJxb0rpc)
+
+> 🔊 The World Wide Web, where you're likely watching this video, is used by millions of people every day for everything from checking the weather, ordering food, and chatting with friends to raising funds, sharing news, or starting revolutions. We use it from our computers, our phones, even our cars. It's just there, all around us, all the time. But what is it exactly?
+>
+> Well, first of all, the World Wide Web is not the Internet, even though the terms are often used interchangeably. The Internet is simply the way computers connect to each other in order to share information. When the Internet first emerged, computers actually made direct calls to each other. Today, networks are all around us, so computers can communicate seamlessly. The communication enabled through the Internet has many uses, such as email, file transfer, and conferencing. But the most common use is accessing the World Wide Web.
+>
+> Think of the Web as a bunch of skyscrapers, each representing a web server, a computer always connected to the Internet, specifically designed to store information and share it. When someone starts a website, they are renting a room in this skyscraper, filling it with information and linking that information together in an organized way for others to access.
+>
+> The people who own these skyscrapers and rent space in them are called web hosts, but anyone can set up a web server with the right equipment a bit of know-how. There's another part to having a website, without which we would be lost in the city with no way of finding what we need.
+>
+> This is the website address, which consists of domain names. Just like with a real-life address, a website address lets you get where you want to go. The information stored in the websites is in web languages, such as HTML and JavaScript. When we find the website we're looking for, our web browser is able to take all the code on the site and turn it into words, graphics, and videos. We don't need to know any special computer languages because the web browser creates a graphic interface for us.
+>
+> So, in a lot of ways, the World Wide Web is a big virtual city where we communicate with each other in web languages, with browsers acting as our translators. And just like no one owns a city, no one owns the Web; it belongs to all of us. Anyone can move in and set up shop. We might have to pay an Internet service provider to gain access, a hosting company to rent web space, or a registrar to reserve our web address. Like utility companies in a city, these companies provide crucial services, but in the end, not even they own the Web.
+>
+> But what really makes the Web so special lies in its very name. Prior to the Web, we used to consume most information in a linear fashion. In a book or newspaper article, each sentence was read from beginning to end, page by page, in a straight line until you reached the end. But that isn't how our brains actually work. Each of our thoughts is linked to other thoughts, memories, and emotions in a loose interconnected network, like a web.
+>
+> Tim Berners-Lee, the father of the World Wide Web, understood that we needed a way to organize information that mirrored this natural arrangement. And the Web accomplishes this through hyperlinks. By linking several pages within a website or even redirecting you to other websites to expand on information or ideas immediately as you encounter them, hyperlinks allow the Web to operate along the same lines as our thought patterns.
+>
+> The Web is so much a part of our lives because in content and structure, it reflects both the wider society and our individual minds. And it connects those minds across all boundaries, not only ethnicity, gender and age but even time and space.
+
+### Listening takeaways
+
+💡 The Internet is the way computers connect to share information while the World Wide Web is a collection of information accessible via the Internet.
+💡 A website address allows users to locate and access specific websites, similar to how a real-life address directs you to a physical location.
+💡 The Web uses hyperlinks to link information in a way that mirrors the network of thoughts, memories and emotions in our brains.
+
+> [!question]- Who is Tim Berners-Lee?
+>
+> Tim Berners-Lee is the father of the World Wide Web who created the concept of hyperlinks to organize information in an interconnected way.
+> ![Tim Berners-Lee|200](https://upload.wikimedia.org/wikipedia/commons/4/4e/Sir_Tim_Berners-Lee_%28cropped%29.jpg)

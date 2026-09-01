@@ -1,0 +1,167 @@
+### Check your comprehension!
+
+> [!question]- What simple components make up a mouse?
+>
+> A mouse has a couple of buttons and a system for detecting motion and distance.
+
+> [!question]- How does an optical mouse measure motion and distance differently from older mice?
+>
+> An optical mouse uses lights and sensors, whereas older mice used a hard rubber ball and plastic wheels.
+
+> [!question]- What role does the basic input/output subsystem (BIOS) play when you click the mouse?
+>
+> The BIOS handles the mouse click, acting as the computer's eyes, ears, mouth, and hands, and generates an interrupt to the CPU.
+
+> [!question]- What is the function of the CPU in a computer?
+>
+> The CPU fetches and executes instructions from memory, running all the tasks of the computer.
+
+> [!question]- How does the CPU handle multiple tasks at once?
+>
+> The CPU multitasks by fetching and executing billions of instructions per second.
+
+> [!question]- What happens when the CPU receives an interrupt from a mouse click?
+>
+> The CPU prioritizes the mouse click, dropping everything else to handle it.
+
+> [!question]- Why are human-readable programming languages compiled into smaller, more efficient instructions for the CPU?
+>
+> Human programs take up a lot of space and contain unnecessary information for the computer, so they are compiled and made smaller for efficiency.
+
+> [!question]- What does the CPU do after recognizing a mouse click over a button on the screen?
+>
+> The CPU fetches instructions from the memory subsystem for the mouse device driver, monitor program, and button program to execute the action associated with the click.
+
+> [!question]- What critical components of a computer's architecture are involved in processing a simple mouse click?
+>
+> The critical components involved are peripherals, the basic input-output system (BIOS), the CPU, programs, and memory.
+
+## 📖 Reading
+
+Přečti si následující text o dvou kolezích, kteří pracují na projektu. Zaměř se na použití present continuous a present simple a všímej si, jak se oba časy střídavě používají k popisu aktuálních činností a obvyklých aktivit.
+
+> Tom and Lisa are colleagues at a software company. They _are currently working_ on a new coding project together. Tom _is sitting_ at his desk and _writing_ some code. Lisa _is reviewing_ the project requirements and _checking_ the latest updates.
+>
+> Lisa: "Tom, what _are_ you _doing_ right now?"
+> Tom: "I _am fixing_ the bugs in the login module. I _usually do_ the front-end part, but today I _am working_ on the back-end as well."
+> Lisa: "I _am updating_ the documentation. _Normally_, I _manage_ the documentation once a week, but this project is special, so I _am doing_ it more often. _Are_ you _having_ any issues with the back-end?"
+> Tom: "Actually, I _am enjoying_ it. It's a nice change.
+>
+> As they work, they discuss their progress.
+>
+> Lisa: "Yes, I _am preparing_ the presentation now. I need to make sure all the details are correct. We _are showing_ them the progress we have made. Do you think we are on track with the project timeline?"
+> Tom: "Yes, we _are meeting_ our deadlines so far. I am confident we can finish on time."
+> Lisa: "I _am working_ on the data integration part now. It's challenging, but I _am learning_ a lot."
+> Tom: "That's great. I _am exploring_ new techniques for optimizing the code. This project _is helping_ us grow our skills."
+>
+> They take a short break and grab some coffee.
+>
+> Lisa: "Tom, _do_ you _often take_ breaks like this during your workday?"
+> Tom: "Yes, I _usually take_ a break every two hours. It _helps_ me stay focused. What about you?"
+> Lisa: "I _do_ the same. It’s important to rest."
+>
+> As the day ends, they summarize their work.
+>
+> Tom: "I _am finishing_ up the final touches on the bug fixes"
+> Lisa: "And I _am completing_ the last part of the documentation update."
+>
+> They pack up their things and prepare to leave.
+>
+> Tom: "See you tomorrow, Lisa. Let’s keep up the good work."
+> Lisa: "Absolutely, Tom. We _are doing_ great."
+>
+> They leave the office with a sense of accomplishment, ready to face the next day’s challenges.
+
+## 🎤 Oprav si výslovnost /ŋ/
+
+Pro většinu českých studentů je výslovnost anglické koncovky **-ing** obtížná, protože zvuk **/ŋ/** se v češtině přirozeně nevyskytuje. To může způsobit, že nevědomky nahradíme tento nezvyklý zvuk nám dobře známým zvukem /nk/ jako třeba ve slově "banka". Neustálým špatným opakováním se pak bohužel tato chyba hluboce zakoření. 😔
+
+### Nosovky /n/ a /ŋ/
+
+I když je pro nás zvuk /ŋ/ nezvyklý, není ve skutečnosti zas tak těžké ho vyslovit a má hodně společného s obyčejným /n/. Obě jsou totiž **nosové souhlásky**. Co to znamená? Nosovky jdou při výslovnosti opravdu přes nos! Jak to poznat? Když si stisknete prsty nos a vyslovíte například dlouhé "á", zvuk není stiskem nosu nijak narušen. Zkuste si však držet nos a u toho vyslovit /n/! Okamžitě poznáte rozdíl, /n/ je blokováno, protože k jeho produkci potřebujeme vzduch jdoucí přes nos.
+
+### Jak správně vyslovit /ŋ/
+
+Správně vyslovit /ŋ/ vyžaduje jen trochu cviku. Představte si, že chce říct /g/, ale namísto toho, abyste tento zvuk plně vyloudili, ho zadržíte a zvuk cestuje zezadu přes nos.
+
+**thin** /θɪn/ 🆚 **thing** /θɪŋ/
+**sin** /sɪn/ 🆚 **sing** /sɪŋ/
+**kin** /kɪn/ 🆚 **king** /kɪŋ/
+**ban** /bæn/ 🆚 **bang** /bæŋ/
+**hand** /hænd/ 🆚 **hang** /hæŋ/
+**son** /sʌn/ 🆚 **song** /sɒŋ/
+
+> young /jʌŋ/
+> strong /strɒŋ/
+> tongue /tʌŋ/
+> morning /ˈmɔː.nɪŋ/
+> painting /ˈpeɪn.tɪŋ/
+> building /ˈbɪl.dɪŋ/
+
+![N or ng](https://www.youtube.com/watch?v=srIuzb20qCU)
+
+> [!question] Co koncovka -ing a odlišné přízvuky?
+> Koncovka -ing ve skutečnosti nemá napříč různými regiony Británie a místními přízvuky jednotnou výslovnost. Můžete tak rodilé mluvčí slyšet tuto koncovku vyslovovat s relativně silným /g/ na konci nebo dokonce jen obyčejným /n/.
+>
+> > talking /tɔːkiŋ/
+> > talking /tɔːkiŋg/
+> > talking /tɔːkin/
+
+## 📝 Writing
+
+Napiš krátký text o projektu, na kterém právě pracuješ. Pokud v IT ještě nepracuješ, piš třeba o cvičném projektu, na kterém se něco učíš, nebo o právě probíhajícím kurzu, kterého se účastníš.
+
+> I am working on a new coding project for my company. I am creating a new feature for the company’s website. Right now, I am focusing on the layout and design. I am also checking the code for any errors. I am fixing bugs as I find them. I usually work on front-end development, but today I am also trying some back-end tasks.
+>
+> My colleague is helping me with the project. He is testing the new feature and giving me feedback. We are discussing the issues and are solving them together. We are both very busy, but we are making good progress. We are aiming to finish the project by the end of the week.
+
+#### Sentence openers
+
+🖋 I am currently...
+🖋 Right now, I am...
+🖋 At the moment, I am...
+🖋 I am in the middle of...
+🖋 My colleague is...
+🖋 I usually... but today I am...
+
+> [!idea] Present simple a present continuous fungují v symbióze
+> I když je ukázkový text pro demonstraci napsaný téměř ze sta procent v přítomném čase průběhovém, přirozené texty jsou ve skutečnosti spíše ladnou symbiózou více časů. Často totiž chceme poukázat na to, jak se to, čím se zabýváme zrovna teď, liší od naší rutinní pracovní náplně.
+
+## 💬 Speaking
+
+**General**
+💬 What books are you reading these days?
+💬 What shows are you watching these days?
+💬 What music are you listening to these days?
+💬 What podcasts are you listening to these days?
+💬 How are you spending your weekends these days?
+💬 Are you learning any new skills right now?
+💬 Are you practicing any sports or physical activities these days?
+💬 How are you staying active and healthy these days?
+
+**Productivity**
+💬 How are you staying motivated and productive these days?
+💬 Are you currently taking any courses or attending any workshops?
+💬 Are you working on any interesting projects at the moment?
+💬 Are you working on any home improvement projects?
+💬 Are you participating in any online communities right now?
+
+**IT**
+💬 What's the most exciting technology trend you're following right now?
+💬 Are you learning any new programming languages / skill right now?
+💬 What frameworks or tools are you experimenting with these days?
+💬 What IT certifications are you currently working towards?
+💬 Are you working on any personal coding projects at the moment?
+💬 How are you staying updated with the latest IT industry trends?
+
+#### Sentence openers
+
+🗨 These days, I'm spending my weekends...
+🗨 At the moment, I'm learning...
+🗨 Currently, I am taking...
+🗨 Right now, I'm participating in...
+🗨 Right now, I'm exploring...
+🗨 I'm currently working on a project that...
+🗨 I'm working towards certifications such as...
+🗨 Currently, I'm attending webinars on...
+🗨 Currently, I am experimenting with frameworks like...
