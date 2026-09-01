@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 
 import { LogoutButton } from "@/components/logout-button";
+import { SiteNav } from "@/components/site-nav";
 import { UserGreeting } from "@/components/user-greeting";
 
 export function SiteHeader() {
@@ -15,14 +16,7 @@ export function SiteHeader() {
           <Zap className="size-5 text-primary" />
           GeekPower
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
-          <Link href="#" className="transition-colors hover:text-foreground">
-            Product
-          </Link>
-          <Link href="#" className="transition-colors hover:text-foreground">
-            Docs
-          </Link>
-        </nav>
+        <SiteNav />
         <div className="flex items-center gap-4">
           <UserGreeting />
           <div className="flex items-center gap-2">
