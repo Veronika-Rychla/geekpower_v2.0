@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -37,11 +37,7 @@ export function LoginForm() {
       return;
     }
 
-    const session = await getSession();
-
-    router.push(
-      session?.user?.role === "admin" ? "/admin-dashboard" : "/user-dashboard",
-    );
+    router.push("/dashboard");
   }
 
   return (
