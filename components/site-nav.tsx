@@ -12,15 +12,14 @@ export function SiteNav() {
 
   return (
     <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
-      <Link href="#" className="transition-colors hover:text-foreground">
-        Product
-      </Link>
-      <Link href="#" className="transition-colors hover:text-foreground">
-        Docs
-      </Link>
       <Link href="/lessons" className="transition-colors hover:text-foreground">
         Lessons
       </Link>
+      {session.user.role === "admin" && (
+        <Link href="/students" className="transition-colors hover:text-foreground">
+          Students
+        </Link>
+      )}
     </nav>
   );
 }

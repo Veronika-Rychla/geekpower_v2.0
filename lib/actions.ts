@@ -22,3 +22,18 @@ export async function completeSublesson(lessonSlug: string, sublessonSlug: strin
 
   revalidatePath(`/lessons/${lessonSlug}`, "layout");
 }
+
+export async function unlockLesson(studentGuid: string, lessonSlug: string) {
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    throw new Error("Not authorized");
+  }
+
+  await sql`
+    INSERT INTO progress.lessons (user_guid, lesson_slug, unlocked_by, unlocked_at)
+    VALUES (${studentGuid}, ${lessonSlug}, ${session.user.guid}, now())
+    ON CONFLICT (user_guid, lesson_slug) DO NOTHING
+  `;
+
+  revalidatePath(`/students/${studentGuid}`);
+}

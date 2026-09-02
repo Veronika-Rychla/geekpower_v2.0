@@ -38,19 +38,21 @@ export default async function SublessonPage({
   return (
     <article className="prose prose-invert w-full max-w-3xl px-8 py-16">
       {content}
-      <form
-        action={completeSublesson.bind(null, lessonSlug, sublessonSlug)}
-        className="not-prose mt-8 border-t border-border pt-6"
-      >
-        {sublesson.completedAt ? (
-          <Button type="submit" variant="outline" disabled className="gap-2">
-            <CheckCircle2 className="size-4 text-primary" />
-            Section completed
-          </Button>
-        ) : (
-          <Button type="submit">Finish section</Button>
-        )}
-      </form>
+      {session.user.role !== "admin" && (
+        <form
+          action={completeSublesson.bind(null, lessonSlug, sublessonSlug)}
+          className="not-prose mt-8 border-t border-border pt-6"
+        >
+          {sublesson.completedAt ? (
+            <Button type="submit" variant="outline" disabled className="gap-2">
+              <CheckCircle2 className="size-4 text-primary" />
+              Section completed
+            </Button>
+          ) : (
+            <Button type="submit">Finish section</Button>
+          )}
+        </form>
+      )}
     </article>
   );
 }

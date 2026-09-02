@@ -10,6 +10,7 @@ export default async function LessonsPage() {
     return null;
   }
   const lessons = await getLessons({ guid: session.user.guid, role: session.user.role });
+  const isAdmin = session.user.role === "admin";
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
@@ -23,9 +24,11 @@ export default async function LessonsPage() {
               <Card className="transition-colors hover:bg-muted">
                 <CardHeader>
                   <CardTitle>{lesson.title}</CardTitle>
-                  <CardDescription>
-                    {completedCount} / {lesson.sublessons.length} completed
-                  </CardDescription>
+                  {!isAdmin && (
+                    <CardDescription>
+                      {completedCount} / {lesson.sublessons.length} completed
+                    </CardDescription>
+                  )}
                 </CardHeader>
               </Card>
             </Link>

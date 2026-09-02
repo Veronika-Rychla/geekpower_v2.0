@@ -22,7 +22,12 @@ export default async function LessonLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1">
-      <LessonSidebar lessonSlug={lesson.slug} lessonTitle={lesson.title} sublessons={lesson.sublessons} />
+      <LessonSidebar
+        lessonSlug={lesson.slug}
+        lessonTitle={lesson.title}
+        sublessons={lesson.sublessons}
+        showProgress={session.user.role !== "admin"}
+      />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

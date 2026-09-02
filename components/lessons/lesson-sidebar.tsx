@@ -11,9 +11,10 @@ interface LessonSidebarProps {
   lessonSlug: string;
   lessonTitle: string;
   sublessons: SublessonMeta[];
+  showProgress: boolean;
 }
 
-export function LessonSidebar({ lessonSlug, lessonTitle, sublessons }: LessonSidebarProps) {
+export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgress }: LessonSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -40,11 +41,12 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons }: LessonSid
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            {sublesson.completedAt ? (
-              <CheckCircle2 className="size-3.5 shrink-0 text-green-500" />
-            ) : (
-              <Circle className="size-3.5 shrink-0" />
-            )}
+            {showProgress &&
+              (sublesson.completedAt ? (
+                <CheckCircle2 className="size-3.5 shrink-0 text-green-500" />
+              ) : (
+                <Circle className="size-3.5 shrink-0" />
+              ))}
             <span className="truncate">{sublesson.title}</span>
           </Link>
         );

@@ -23,6 +23,21 @@ interface AccessUser {
   role: "admin" | "user";
 }
 
+export interface StudentSummary {
+  guid: string;
+  name: string;
+  email: string;
+  unlockedLessonCount: number;
+  totalLessonCount: number;
+  completedSublessonCount: number;
+  totalSublessonCount: number;
+}
+
+export interface StudentLessonDetail extends LessonMeta {
+  unlocked: boolean;
+  unlockedAt: string | null;
+}
+
 function titleFromSlug(slug: string): string {
   const withoutOrderPrefix = slug.replace(/^\d+-/, "");
   return withoutOrderPrefix
@@ -127,3 +142,68 @@ export const getLesson = cache(async (user: AccessUser, lessonSlug: string): Pro
   const completion = await getSublessonCompletion(user.guid);
   return buildLessonMeta(lessonSlug, completion);
 });
+
+function getTotalSublessonCount(): number {
+  return listLessonSlugs().reduce((sum, slug) => sum + listSublessonSlugs(slug).length, 0);
+}
+
+/** All students (role "user"), with unlocked-lesson and completed-sublesson counts. For admin use. */
+export async function getStudents(): Promise<StudentSummary[]> {
+  const [users, unlockedRows, completedRows] = await Promise.all([
+    sql`SELECT guid, name, email FROM users WHERE role = 'user' ORDER BY name`,
+    sql`SELECT user_guid, COUNT(*)::int AS count FROM progress.lessons GROUP BY user_guid`,
+    sql`
+      SELECT user_guid, COUNT(*)::int AS count FROM progress.sublessons
+      WHERE completed_at IS NOT NULL
+      GROUP BY user_guid
+    `,
+  ]);
+
+  const unlockedByUser = new Map(unlockedRows.map((row) => [row.user_guid as string, row.count as number]));
+  const completedByUser = new Map(completedRows.map((row) => [row.user_guid as string, row.count as number]));
+
+  const totalLessonCount = listLessonSlugs().length;
+  const totalSublessonCount = getTotalSublessonCount();
+
+  return (users as { guid: string; name: string; email: string }[]).map((student) => ({
+    guid: student.guid,
+    name: student.name,
+    email: student.email,
+    unlockedLessonCount: unlockedByUser.get(student.guid) ?? 0,
+    totalLessonCount,
+    completedSublessonCount: completedByUser.get(student.guid) ?? 0,
+    totalSublessonCount,
+  }));
+}
+
+/** One student's full lesson breakdown (locked and unlocked), for the admin detail page. */
+export async function getStudentDetail(studentGuid: string): Promise<{
+  student: { guid: string; name: string; email: string };
+  lessons: StudentLessonDetail[];
+} | null> {
+  const [student] = await sql`
+    SELECT guid, name, email FROM users WHERE guid = ${studentGuid} AND role = 'user'
+  `;
+  if (!student) {
+    return null;
+  }
+
+  const [unlockedRows, completion] = await Promise.all([
+    sql`SELECT lesson_slug, unlocked_at FROM progress.lessons WHERE user_guid = ${studentGuid}`,
+    getSublessonCompletion(studentGuid),
+  ]);
+  const unlockedByLesson = new Map(
+    unlockedRows.map((row) => [row.lesson_slug as string, row.unlocked_at as string]),
+  );
+
+  const lessons = listLessonSlugs().map((lessonSlug) => ({
+    ...buildLessonMeta(lessonSlug, completion),
+    unlocked: unlockedByLesson.has(lessonSlug),
+    unlockedAt: unlockedByLesson.get(lessonSlug) ?? null,
+  }));
+
+  return {
+    student: student as { guid: string; name: string; email: string },
+    lessons,
+  };
+}
