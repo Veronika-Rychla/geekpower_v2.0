@@ -14,8 +14,12 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-4">
-      <UserGreeting name={session.user.name} />
-      <LogoutButton />
+      <span className="hidden sm:inline">
+        <UserGreeting name={session.user.name} />
+      </span>
+      <span className="hidden sm:inline-flex">
+        <LogoutButton />
+      </span>
     </div>
   );
 }

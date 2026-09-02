@@ -29,6 +29,13 @@ export default async function SublessonPage({
   const source = getSublessonSource(lessonSlug, sublessonSlug);
   const { content } = await compileMDX({
     source,
+    components: {
+      table: (props) => (
+        <div className="overflow-x-auto">
+          <table {...props} />
+        </div>
+      ),
+    },
     options: {
       mdxOptions: { remarkPlugins: [remarkGfm, remarkFlexibleMarkers, remarkCallouts] },
       blockJS: false,
@@ -36,7 +43,7 @@ export default async function SublessonPage({
   });
 
   return (
-    <article className="prose prose-invert w-full max-w-3xl px-8 py-16">
+    <article className="prose prose-invert w-full max-w-3xl px-4 py-10 sm:px-8 sm:py-16">
       {content}
       {session.user.role !== "admin" && (
         <form

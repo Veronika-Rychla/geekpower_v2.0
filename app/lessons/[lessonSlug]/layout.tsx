@@ -21,7 +21,7 @@ export default async function LessonLayout({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col md:flex-row">
       <LessonSidebar
         lessonSlug={lesson.slug}
         lessonTitle={lesson.title}
