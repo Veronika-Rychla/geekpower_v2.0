@@ -128,3 +128,35 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  .flexible-marker {
+    background-color: color-mix(in oklch, var(--primary), transparent 80%);
+    color: inherit;
+    border-radius: 0.2em;
+    padding: 0 0.2em;
+  }
+
+  .callout {
+    margin: 1.5rem 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background-color: var(--muted);
+    padding: 1rem;
+  }
+
+  .callout-title {
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .callout-tip,
+  .callout-success {
+    border-color: color-mix(in oklch, var(--border), oklch(0.7 0.15 150) 50%);
+  }
+
+  .callout-info,
+  .callout-question {
+    border-color: color-mix(in oklch, var(--border), oklch(0.7 0.15 250) 50%);
+  }
+}
