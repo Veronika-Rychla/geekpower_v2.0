@@ -41,7 +41,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons }: LessonSid
             )}
           >
             {sublesson.completedAt ? (
-              <CheckCircle2 className="size-3.5 shrink-0 text-primary" />
+              <CheckCircle2 className="size-3.5 shrink-0 text-green-500" />
             ) : (
               <Circle className="size-3.5 shrink-0" />
             )}
