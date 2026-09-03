@@ -20,7 +20,7 @@ export interface LessonMeta {
 
 interface AccessUser {
   guid: string;
-  role: "admin" | "user";
+  role: "Admin" | "User";
 }
 
 export interface StudentSummary {
@@ -110,7 +110,7 @@ function buildLessonMeta(
 /** Lessons visible to this user: all of them for an admin, only unlocked ones otherwise. */
 export async function getLessons(user: AccessUser): Promise<LessonMeta[]> {
   const allSlugs = listLessonSlugs();
-  const isAdmin = user.role === "admin";
+  const isAdmin = user.role === "Admin";
 
   const [unlockedSlugs, completion] = await Promise.all([
     isAdmin ? Promise.resolve(new Set(allSlugs)) : getUnlockedLessonSlugs(user.guid),
@@ -132,7 +132,7 @@ export const getLesson = cache(async (user: AccessUser, lessonSlug: string): Pro
     return null;
   }
 
-  if (user.role !== "admin") {
+  if (user.role !== "Admin") {
     const unlockedSlugs = await getUnlockedLessonSlugs(user.guid);
     if (!unlockedSlugs.has(lessonSlug)) {
       return null;
@@ -147,10 +147,10 @@ function getTotalSublessonCount(): number {
   return listLessonSlugs().reduce((sum, slug) => sum + listSublessonSlugs(slug).length, 0);
 }
 
-/** All students (role "user"), with unlocked-lesson and completed-sublesson counts. For admin use. */
+/** All students (role "User"), with unlocked-lesson and completed-sublesson counts. For admin use. */
 export async function getStudents(): Promise<StudentSummary[]> {
   const [users, unlockedRows, completedRows] = await Promise.all([
-    sql`SELECT guid, name, email FROM users WHERE role = 'user' ORDER BY name`,
+    sql`SELECT guid, name, email FROM users WHERE role = 'User' ORDER BY name`,
     sql`SELECT user_guid, COUNT(*)::int AS count FROM progress.lessons GROUP BY user_guid`,
     sql`
       SELECT user_guid, COUNT(*)::int AS count FROM progress.sublessons
@@ -182,7 +182,7 @@ export async function getStudentDetail(studentGuid: string): Promise<{
   lessons: StudentLessonDetail[];
 } | null> {
   const [student] = await sql`
-    SELECT guid, name, email FROM users WHERE guid = ${studentGuid} AND role = 'user'
+    SELECT guid, name, email FROM users WHERE guid = ${studentGuid} AND role = 'User'
   `;
   if (!student) {
     return null;

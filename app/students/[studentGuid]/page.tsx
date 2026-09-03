@@ -26,7 +26,7 @@ export default async function StudentDetailPage({
   const { studentGuid } = await params;
 
   const session = await auth();
-  if (session?.user?.role !== "admin") {
+  if (session?.user?.role !== "Admin") {
     notFound();
   }
 

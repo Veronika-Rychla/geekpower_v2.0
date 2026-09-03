@@ -5,8 +5,10 @@ export interface User {
   guid: string;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: "Admin" | "User";
+  status: "Active" | "Inactive";
   password_hash: string;
+  logged_at?: string; // timestamp
 }
 
 // progress.lessons

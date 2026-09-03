@@ -4,7 +4,7 @@ import { UserDashboard } from "@/components/dashboard/user-dashboard";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = session?.user?.role === "Admin";
 
   return isAdmin ? <AdminDashboard /> : <UserDashboard />;
 }

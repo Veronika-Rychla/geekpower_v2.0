@@ -12,7 +12,7 @@ export function useNavLinks() {
 
   return [
     { href: "/lessons", label: "Lessons" },
-    ...(session.user.role === "admin" ? [{ href: "/students", label: "Students" }] : []),
+    ...(session.user.role === "Admin" ? [{ href: "/students", label: "Students" }] : []),
   ];
 }
 

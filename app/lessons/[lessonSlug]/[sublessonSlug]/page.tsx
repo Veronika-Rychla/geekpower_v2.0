@@ -45,7 +45,7 @@ export default async function SublessonPage({
   return (
     <article className="prose prose-invert w-full max-w-3xl px-4 py-10 sm:px-8 sm:py-16">
       {content}
-      {session.user.role !== "admin" && (
+      {session.user.role !== "Admin" && (
         <form
           action={completeSublesson.bind(null, lessonSlug, sublessonSlug)}
           className="not-prose mt-8 border-t border-border pt-6"

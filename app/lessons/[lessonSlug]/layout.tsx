@@ -26,7 +26,7 @@ export default async function LessonLayout({
         lessonSlug={lesson.slug}
         lessonTitle={lesson.title}
         sublessons={lesson.sublessons}
-        showProgress={session.user.role !== "admin"}
+        showProgress={session.user.role !== "Admin"}
       />
       <div className="min-w-0 flex-1">{children}</div>
     </div>

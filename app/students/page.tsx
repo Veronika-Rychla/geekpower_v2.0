@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/auth";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getStudents } from "@/lib/lessons";
 
 export default async function StudentsPage() {
   const session = await auth();
-  if (session?.user?.role !== "admin") {
+  if (session?.user?.role !== "Admin") {
     notFound();
   }
 
@@ -15,7 +16,12 @@ export default async function StudentsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Students</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Students</h1>
+        <Link href="/students/new" className={buttonVariants({ size: "sm" })}>
+          Create student
+        </Link>
+      </div>
       <div className="flex flex-col gap-4">
         {students.map((student) => (
           <Link key={student.guid} href={`/students/${student.guid}`}>
