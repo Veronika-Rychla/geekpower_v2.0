@@ -3,7 +3,8 @@
 // public.users
 export interface User {
   guid: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: "Admin" | "User";
   status: "Active" | "Inactive";

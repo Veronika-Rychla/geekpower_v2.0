@@ -38,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         return {
           id: user.guid,
-          name: user.name,
+          name: `${user.first_name} ${user.last_name}`.trim(),
           email: user.email,
           role: user.role,
         };
@@ -46,16 +46,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       if (user) {
         return { ...token, role: (user as { role?: "Admin" | "User" }).role };
-      }
-      if (trigger === "update" && session) {
-        return {
-          ...token,
-          name: session.name ?? token.name,
-          email: session.email ?? token.email,
-        };
       }
       return token;
     },

@@ -9,12 +9,13 @@ import { EditUserForm } from "@/components/students/edit-user-form";
 
 interface EditStudentDialogProps {
   guid: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   status: "Active" | "Inactive";
 }
 
-export function EditStudentDialog({ guid, name, email, status }: EditStudentDialogProps) {
+export function EditStudentDialog({ guid, firstName, lastName, email, status }: EditStudentDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,7 +27,7 @@ export function EditStudentDialog({ guid, name, email, status }: EditStudentDial
       <DialogContent>
         <EditUserForm
           guid={guid}
-          defaultValues={{ name, email, status }}
+          defaultValues={{ firstName, lastName, email, status }}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>

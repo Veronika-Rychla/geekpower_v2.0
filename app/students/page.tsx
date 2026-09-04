@@ -25,7 +25,7 @@ export default async function StudentsPage() {
           <Link key={student.guid} href={`/students/${student.guid}`}>
             <Card className="transition-colors hover:bg-muted">
               <CardHeader>
-                <CardTitle>{student.name}</CardTitle>
+                <CardTitle>{student.firstName} {student.lastName}</CardTitle>
                 <CardDescription>{student.email}</CardDescription>
                 <CardDescription>
                   {student.unlockedLessonCount} / {student.totalLessonCount} lessons unlocked ·{" "}

@@ -25,7 +25,8 @@ interface AccessUser {
 
 export interface StudentSummary {
   guid: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   unlockedLessonCount: number;
   totalLessonCount: number;
@@ -150,7 +151,7 @@ function getTotalSublessonCount(): number {
 /** All students (role "User"), with unlocked-lesson and completed-sublesson counts. For admin use. */
 export async function getStudents(): Promise<StudentSummary[]> {
   const [users, unlockedRows, completedRows] = await Promise.all([
-    sql`SELECT guid, name, email FROM users WHERE role = 'User' ORDER BY name`,
+    sql`SELECT guid, first_name, last_name, email FROM users WHERE role = 'User' ORDER BY first_name, last_name`,
     sql`SELECT user_guid, COUNT(*)::int AS count FROM progress.lessons GROUP BY user_guid`,
     sql`
       SELECT user_guid, COUNT(*)::int AS count FROM progress.sublessons
@@ -165,9 +166,10 @@ export async function getStudents(): Promise<StudentSummary[]> {
   const totalLessonCount = listLessonSlugs().length;
   const totalSublessonCount = getTotalSublessonCount();
 
-  return (users as { guid: string; name: string; email: string }[]).map((student) => ({
+  return (users as { guid: string; first_name: string; last_name: string; email: string }[]).map((student) => ({
     guid: student.guid,
-    name: student.name,
+    firstName: student.first_name,
+    lastName: student.last_name,
     email: student.email,
     unlockedLessonCount: unlockedByUser.get(student.guid) ?? 0,
     totalLessonCount,
@@ -178,11 +180,11 @@ export async function getStudents(): Promise<StudentSummary[]> {
 
 /** One student's full lesson breakdown (locked and unlocked), for the admin detail page. */
 export async function getStudentDetail(studentGuid: string): Promise<{
-  student: { guid: string; name: string; email: string; status: "Active" | "Inactive" };
+  student: { guid: string; firstName: string; lastName: string; email: string; status: "Active" | "Inactive" };
   lessons: StudentLessonDetail[];
 } | null> {
   const [student] = await sql`
-    SELECT guid, name, email, status FROM users WHERE guid = ${studentGuid} AND role = 'User'
+    SELECT guid, first_name, last_name, email, status FROM users WHERE guid = ${studentGuid} AND role = 'User'
   `;
   if (!student) {
     return null;
@@ -202,8 +204,15 @@ export async function getStudentDetail(studentGuid: string): Promise<{
     unlockedAt: unlockedByLesson.get(lessonSlug) ?? null,
   }));
 
+  const row = student as { guid: string; first_name: string; last_name: string; email: string; status: "Active" | "Inactive" };
   return {
-    student: student as { guid: string; name: string; email: string; status: "Active" | "Inactive" },
+    student: {
+      guid: row.guid,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.email,
+      status: row.status,
+    },
     lessons,
   };
 }

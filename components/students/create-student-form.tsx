@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { createStudent } from "@/lib/actions";
 
 interface CreateStudentFields {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   status: "Active" | "Inactive";
 }
@@ -44,14 +45,25 @@ export function CreateStudentForm() {
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="firstName">First name</Label>
           <Input
-            id="name"
-            placeholder="Jane Smith"
-            aria-invalid={!!errors.name}
-            {...register("name", { required: "Name is required" })}
+            id="firstName"
+            placeholder="Jane"
+            aria-invalid={!!errors.firstName}
+            {...register("firstName", { required: "First name is required" })}
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="lastName">Last name</Label>
+          <Input
+            id="lastName"
+            placeholder="Smith"
+            aria-invalid={!!errors.lastName}
+            {...register("lastName", { required: "Last name is required" })}
+          />
+          {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">

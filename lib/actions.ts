@@ -44,7 +44,8 @@ export async function unlockLesson(studentGuid: string, lessonSlug: string) {
 }
 
 export async function createStudent(data: {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   status: "Active" | "Inactive";
 }): Promise<{ error: string } | { guid: string }> {
@@ -62,8 +63,8 @@ export async function createStudent(data: {
   const guid = randomUUID();
 
   await sql`
-    INSERT INTO users (guid, name, email, role, status, password_hash)
-    VALUES (${guid}, ${data.name}, ${data.email}, 'User', ${data.status}, ${passwordHash})
+    INSERT INTO users (guid, first_name, last_name, email, role, status, password_hash)
+    VALUES (${guid}, ${data.firstName}, ${data.lastName}, ${data.email}, 'User', ${data.status}, ${passwordHash})
   `;
 
   revalidatePath("/students");
@@ -72,7 +73,7 @@ export async function createStudent(data: {
 
 export async function updateUser(
   guid: string,
-  data: { name: string; email: string; status?: "Active" | "Inactive" },
+  data: { firstName: string; lastName: string; email: string; status: "Active" | "Inactive" },
 ): Promise<{ error: string } | { success: true }> {
   const session = await auth();
   if (session?.user?.role !== "Admin") {
@@ -84,17 +85,10 @@ export async function updateUser(
     return { error: "A user with this email already exists." };
   }
 
-  if (data.status) {
-    await sql`
-      UPDATE users SET name = ${data.name}, email = ${data.email}, status = ${data.status}
-      WHERE guid = ${guid}
-    `;
-  } else {
-    await sql`
-      UPDATE users SET name = ${data.name}, email = ${data.email}
-      WHERE guid = ${guid}
-    `;
-  }
+  await sql`
+    UPDATE users SET first_name = ${data.firstName}, last_name = ${data.lastName}, email = ${data.email}, status = ${data.status}
+    WHERE guid = ${guid}
+  `;
 
   revalidatePath("/students");
   revalidatePath(`/students/${guid}`);

@@ -10,14 +10,15 @@ import { Label } from "@/components/ui/label";
 import { updateUser } from "@/lib/actions";
 
 interface EditUserFields {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   status: "Active" | "Inactive";
 }
 
 interface EditUserFormProps {
   guid: string;
-  defaultValues: { name: string; email: string; status: "Active" | "Inactive" };
+  defaultValues: { firstName: string; lastName: string; email: string; status: "Active" | "Inactive" };
   onSuccess: () => void;
 }
 
@@ -50,14 +51,25 @@ export function EditUserForm({ guid, defaultValues, onSuccess }: EditUserFormPro
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="edit-name">Name</Label>
+          <Label htmlFor="edit-first-name">First name</Label>
           <Input
-            id="edit-name"
-            placeholder="Jane Smith"
-            aria-invalid={!!errors.name}
-            {...register("name", { required: "Name is required" })}
+            id="edit-first-name"
+            placeholder="Jane"
+            aria-invalid={!!errors.firstName}
+            {...register("firstName", { required: "First name is required" })}
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="edit-last-name">Last name</Label>
+          <Input
+            id="edit-last-name"
+            placeholder="Smith"
+            aria-invalid={!!errors.lastName}
+            {...register("lastName", { required: "Last name is required" })}
+          />
+          {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">

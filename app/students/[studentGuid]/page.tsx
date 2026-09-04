@@ -49,14 +49,15 @@ export default async function StudentDetailPage({
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">{student.name}</h1>
+            <h1 className="text-2xl font-semibold">{student.firstName} {student.lastName}</h1>
             <p className="text-sm text-muted-foreground">
               {student.email} · {student.status}
             </p>
           </div>
           <EditStudentDialog
             guid={student.guid}
-            name={student.name}
+            firstName={student.firstName}
+            lastName={student.lastName}
             email={student.email}
             status={student.status}
           />
