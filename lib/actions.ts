@@ -69,3 +69,34 @@ export async function createStudent(data: {
   revalidatePath("/students");
   return { guid };
 }
+
+export async function updateUser(
+  guid: string,
+  data: { name: string; email: string; status?: "Active" | "Inactive" },
+): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (session?.user?.role !== "Admin") {
+    throw new Error("Not authorized");
+  }
+
+  const existing = await getUserByEmail(data.email);
+  if (existing && existing.guid !== guid) {
+    return { error: "A user with this email already exists." };
+  }
+
+  if (data.status) {
+    await sql`
+      UPDATE users SET name = ${data.name}, email = ${data.email}, status = ${data.status}
+      WHERE guid = ${guid}
+    `;
+  } else {
+    await sql`
+      UPDATE users SET name = ${data.name}, email = ${data.email}
+      WHERE guid = ${guid}
+    `;
+  }
+
+  revalidatePath("/students");
+  revalidatePath(`/students/${guid}`);
+  return { success: true };
+}

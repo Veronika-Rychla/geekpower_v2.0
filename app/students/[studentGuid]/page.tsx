@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EditStudentDialog } from "@/components/students/edit-student-dialog";
 import { unlockLesson } from "@/lib/actions";
 import { getStudentDetail } from "@/lib/lessons";
 
@@ -46,8 +47,20 @@ export default async function StudentDetailPage({
         >
           ← All students
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{student.name}</h1>
-        <p className="text-sm text-muted-foreground">{student.email}</p>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold">{student.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {student.email} · {student.status}
+            </p>
+          </div>
+          <EditStudentDialog
+            guid={student.guid}
+            name={student.name}
+            email={student.email}
+            status={student.status}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">

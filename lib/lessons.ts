@@ -178,11 +178,11 @@ export async function getStudents(): Promise<StudentSummary[]> {
 
 /** One student's full lesson breakdown (locked and unlocked), for the admin detail page. */
 export async function getStudentDetail(studentGuid: string): Promise<{
-  student: { guid: string; name: string; email: string };
+  student: { guid: string; name: string; email: string; status: "Active" | "Inactive" };
   lessons: StudentLessonDetail[];
 } | null> {
   const [student] = await sql`
-    SELECT guid, name, email FROM users WHERE guid = ${studentGuid} AND role = 'User'
+    SELECT guid, name, email, status FROM users WHERE guid = ${studentGuid} AND role = 'User'
   `;
   if (!student) {
     return null;
@@ -203,7 +203,7 @@ export async function getStudentDetail(studentGuid: string): Promise<{
   }));
 
   return {
-    student: student as { guid: string; name: string; email: string },
+    student: student as { guid: string; name: string; email: string; status: "Active" | "Inactive" },
     lessons,
   };
 }

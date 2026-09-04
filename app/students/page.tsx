@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/auth";
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreateStudentDialog } from "@/components/students/create-student-dialog";
 import { getStudents } from "@/lib/lessons";
 
 export default async function StudentsPage() {
@@ -18,9 +18,7 @@ export default async function StudentsPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Students</h1>
-        <Link href="/students/new" className={buttonVariants({ size: "sm" })}>
-          Create student
-        </Link>
+        <CreateStudentDialog />
       </div>
       <div className="flex flex-col gap-4">
         {students.map((student) => (

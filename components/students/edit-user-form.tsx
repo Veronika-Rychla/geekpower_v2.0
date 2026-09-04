@@ -1,52 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createStudent } from "@/lib/actions";
+import { updateUser } from "@/lib/actions";
 
-interface CreateStudentFields {
+interface EditUserFields {
   name: string;
   email: string;
   status: "Active" | "Inactive";
 }
 
-export function CreateStudentForm() {
-  const router = useRouter();
+interface EditUserFormProps {
+  guid: string;
+  defaultValues: { name: string; email: string; status: "Active" | "Inactive" };
+  onSuccess: () => void;
+}
+
+export function EditUserForm({ guid, defaultValues, onSuccess }: EditUserFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<CreateStudentFields>({ defaultValues: { status: "Active" } });
+  } = useForm<EditUserFields>({
+    defaultValues,
+  });
 
-  async function onSubmit(data: CreateStudentFields) {
+  async function onSubmit(data: EditUserFields) {
     setFormError(null);
-    const result = await createStudent(data);
+    const result = await updateUser(guid, data);
 
     if ("error" in result) {
       setFormError(result.error);
       return;
     }
 
-    router.push(`/students/${result.guid}`);
+    onSuccess();
   }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Create student</DialogTitle>
+        <DialogTitle>Edit student</DialogTitle>
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="edit-name">Name</Label>
           <Input
-            id="name"
+            id="edit-name"
             placeholder="Jane Smith"
             aria-invalid={!!errors.name}
             {...register("name", { required: "Name is required" })}
@@ -55,9 +61,9 @@ export function CreateStudentForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="edit-email">Email</Label>
           <Input
-            id="email"
+            id="edit-email"
             type="email"
             placeholder="jane@example.com"
             aria-invalid={!!errors.email}
@@ -70,9 +76,9 @@ export function CreateStudentForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="edit-status">Status</Label>
           <select
-            id="status"
+            id="edit-status"
             className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
             {...register("status", { required: true })}
           >
@@ -90,7 +96,7 @@ export function CreateStudentForm() {
         <DialogFooter>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating…" : "Create student"}
+            {isSubmitting ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>
       </form>
