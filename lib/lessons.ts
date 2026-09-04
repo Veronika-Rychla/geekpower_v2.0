@@ -52,6 +52,12 @@ function titleFromContent(source: string, fallback: string): string {
   return match ? match[1].trim() : fallback;
 }
 
+/** Prefixes a title with the slug's leading order number, e.g. "01-intro" + "Intro" -> "01 - Intro". */
+function withOrderPrefix(slug: string, title: string): string {
+  const match = slug.match(/^(\d+)-/);
+  return match ? `${match[1]} - ${title}` : title;
+}
+
 function listLessonSlugs(): string[] {
   return fs
     .readdirSync(LESSONS_DIR, { withFileTypes: true })
@@ -96,12 +102,12 @@ function buildLessonMeta(
 ): LessonMeta {
   return {
     slug: lessonSlug,
-    title: titleFromSlug(lessonSlug),
+    title: withOrderPrefix(lessonSlug, titleFromSlug(lessonSlug)),
     sublessons: listSublessonSlugs(lessonSlug).map((sublessonSlug) => {
       const source = getSublessonSource(lessonSlug, sublessonSlug);
       return {
         slug: sublessonSlug,
-        title: titleFromContent(source, titleFromSlug(sublessonSlug)),
+        title: withOrderPrefix(sublessonSlug, titleFromContent(source, titleFromSlug(sublessonSlug))),
         completedAt: completion.get(`${lessonSlug}/${sublessonSlug}`) ?? null,
       };
     }),
