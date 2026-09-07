@@ -9,7 +9,6 @@ export interface User {
   role: "Admin" | "User";
   status: "Active" | "Inactive";
   password_hash: string;
-  logged_at?: string; // timestamp
 }
 
 // progress.lessons

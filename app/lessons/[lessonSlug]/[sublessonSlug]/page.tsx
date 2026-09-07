@@ -6,6 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
+import { Quiz } from "@/components/lessons/quiz";
 import { completeSublesson } from "@/lib/actions";
 import { remarkCallouts } from "@/lib/mdx/remark-callouts";
 import { getLesson, getSublessonSource } from "@/lib/lessons";
@@ -35,6 +36,7 @@ export default async function SublessonPage({
           <table {...props} />
         </div>
       ),
+      Quiz,
     },
     options: {
       mdxOptions: { remarkPlugins: [remarkGfm, remarkFlexibleMarkers, remarkCallouts] },

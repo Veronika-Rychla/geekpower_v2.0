@@ -69,13 +69,13 @@ function listLessonSlugs(): string[] {
 function listSublessonSlugs(lessonSlug: string): string[] {
   return fs
     .readdirSync(path.join(LESSONS_DIR, lessonSlug))
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => file.replace(/\.md$/, ""))
+    .filter((file) => file.endsWith(".mdx"))
+    .map((file) => file.replace(/\.mdx$/, ""))
     .sort();
 }
 
 export function getSublessonSource(lessonSlug: string, sublessonSlug: string): string {
-  return fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, `${sublessonSlug}.md`), "utf8");
+  return fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, `${sublessonSlug}.mdx`), "utf8");
 }
 
 async function getUnlockedLessonSlugs(userGuid: string): Promise<Set<string>> {
