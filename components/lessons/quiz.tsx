@@ -1,28 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { saveInteraction } from "@/lib/actions";
 
 interface QuizOption {
   id: string;
   text: string;
 }
 
-interface QuizProps {
+export interface QuizProps {
+  id: string;
   question: string;
   options: QuizOption[];
   correctId: string;
 }
 
-export function Quiz({ question, options, correctId }: QuizProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+interface QuizWithProgressProps extends QuizProps {
+  lessonSlug: string;
+  sublessonSlug: string;
+  initialSelectedId?: string;
+}
+
+export function Quiz({
+  id,
+  question,
+  options,
+  correctId,
+  lessonSlug,
+  sublessonSlug,
+  initialSelectedId,
+}: QuizWithProgressProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
+  const [submitted, setSubmitted] = useState(Boolean(initialSelectedId));
+  const [isPending, startTransition] = useTransition();
 
   const isCorrect = selectedId === correctId;
+
+  function handleCheck() {
+    if (!selectedId) return;
+    setSubmitted(true);
+    startTransition(async () => {
+      await saveInteraction(lessonSlug, sublessonSlug, id, "quiz", {
+        selectedId,
+        correct: selectedId === correctId,
+      });
+    });
+  }
+
+  function handleRedo() {
+    setSelectedId(null);
+    setSubmitted(false);
+  }
 
   return (
     <Card className="not-prose my-8 gap-4 p-6">
@@ -31,8 +64,8 @@ export function Quiz({ question, options, correctId }: QuizProps) {
       <div className="flex flex-col gap-2">
         {options.map((option) => {
           const isSelected = selectedId === option.id;
-          const showCorrect = submitted && option.id === correctId;
-          const showIncorrect = submitted && isSelected && !showCorrect;
+          const showCorrect = submitted && isCorrect && isSelected;
+          const showIncorrect = submitted && !isCorrect && isSelected;
 
           return (
             <button
@@ -46,7 +79,7 @@ export function Quiz({ question, options, correctId }: QuizProps) {
                 !submitted && !isSelected && "border-input hover:bg-muted",
                 showCorrect && "border-green-500 bg-green-500/10 text-green-600 dark:text-green-400",
                 showIncorrect && "border-destructive bg-destructive/10 text-destructive",
-                submitted && !isSelected && !showCorrect && "opacity-60",
+                submitted && !isSelected && "opacity-60",
               )}
             >
               {showCorrect && <Check className="size-4 shrink-0" />}
@@ -58,17 +91,24 @@ export function Quiz({ question, options, correctId }: QuizProps) {
       </div>
 
       {submitted ? (
-        <p
-          className={cn(
-            "text-sm font-medium",
-            isCorrect ? "text-green-600 dark:text-green-400" : "text-destructive",
+        <div className="flex items-center gap-3">
+          <p
+            className={cn(
+              "text-sm font-medium",
+              isCorrect ? "text-green-600 dark:text-green-400" : "text-destructive",
+            )}
+          >
+            {isCorrect ? "Correct! 🎉" : "Not quite — try again."}
+          </p>
+          {!isCorrect && (
+            <Button type="button" variant="outline" size="sm" onClick={handleRedo}>
+              Redo
+            </Button>
           )}
-        >
-          {isCorrect ? "Correct! 🎉" : "Not quite — the correct answer is highlighted above."}
-        </p>
+        </div>
       ) : (
-        <Button type="button" disabled={!selectedId} onClick={() => setSubmitted(true)} className="self-start">
-          Check answer
+        <Button type="button" disabled={!selectedId || isPending} onClick={handleCheck} className="self-start">
+          {isPending ? "Saving…" : "Check answer"}
         </Button>
       )}
     </Card>

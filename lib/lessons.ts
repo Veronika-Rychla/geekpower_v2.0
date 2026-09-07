@@ -78,6 +78,31 @@ export function getSublessonSource(lessonSlug: string, sublessonSlug: string): s
   return fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, `${sublessonSlug}.mdx`), "utf8");
 }
 
+/** The ids of every `<Quiz id="...">` block in a sublesson's MDX source. */
+export function extractQuizIds(source: string): string[] {
+  return [...source.matchAll(/<Quiz\s+id="([^"]+)"/g)].map((match) => match[1]);
+}
+
+export function getQuizIds(lessonSlug: string, sublessonSlug: string): string[] {
+  return extractQuizIds(getSublessonSource(lessonSlug, sublessonSlug));
+}
+
+/** This user's saved responses for every interactive block in a sublesson, keyed by interaction id. */
+export async function getInteractions(
+  userGuid: string,
+  lessonSlug: string,
+  sublessonSlug: string,
+): Promise<Record<string, { type: string; response: unknown }>> {
+  const rows = await sql`
+    SELECT interaction_id, type, response
+    FROM progress.interactions
+    WHERE user_guid = ${userGuid} AND lesson_slug = ${lessonSlug} AND sublesson_slug = ${sublessonSlug}
+  `;
+  return Object.fromEntries(
+    rows.map((row) => [row.interaction_id as string, { type: row.type as string, response: row.response }]),
+  );
+}
+
 async function getUnlockedLessonSlugs(userGuid: string): Promise<Set<string>> {
   const rows = await sql`
     SELECT lesson_slug FROM progress.lessons WHERE user_guid = ${userGuid}

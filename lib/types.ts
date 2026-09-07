@@ -27,3 +27,14 @@ export interface ProgressSublesson {
   completed_at?: string; // timestamp
   last_position?: string;
 }
+
+// progress.interactions
+export interface ProgressInteraction {
+  user_guid: string;
+  lesson_slug: string;
+  sublesson_slug: string;
+  interaction_id: string;
+  type: string;
+  response: unknown;
+  completed_at: string; // timestamp
+}
