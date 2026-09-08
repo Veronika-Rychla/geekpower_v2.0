@@ -8,7 +8,7 @@ export interface User {
   email: string;
   role: "Admin" | "User";
   status: "Active" | "Inactive";
-  password_hash: string;
+  password_hash: string | null;
 }
 
 // progress.lessons
@@ -37,4 +37,12 @@ export interface ProgressInteraction {
   type: string;
   response: unknown;
   completed_at: string; // timestamp
+}
+
+// public.password_reset_tokens
+export interface PasswordResetToken {
+  token: string;
+  user_guid: string;
+  expires_at: string; // timestamp
+  created_at: string; // timestamp
 }

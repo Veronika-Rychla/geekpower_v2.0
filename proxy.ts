@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 
-const PUBLIC_PATHS = ["/"];
+const PUBLIC_PATHS = ["/", "/forgot-password", "/set-password"];
 
 export default auth((req) => {
   const isPublic = PUBLIC_PATHS.includes(req.nextUrl.pathname);
