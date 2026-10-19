@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
+import { hasAdminAccess } from "@/lib/utils";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { getLesson } from "@/lib/lessons";
 
@@ -26,7 +27,7 @@ export default async function LessonLayout({
         lessonSlug={lesson.slug}
         lessonTitle={lesson.title}
         sublessons={lesson.sublessons}
-        showProgress={session.user.role !== "Admin"}
+        showProgress={!hasAdminAccess(session.user.role)}
       />
       <div className="min-w-0 flex-1">{children}</div>
     </div>

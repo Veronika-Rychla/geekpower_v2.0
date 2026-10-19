@@ -3,6 +3,8 @@ import path from "node:path";
 import { cache } from "react";
 
 import { sql } from "@/app/database";
+import type { Role } from "@/lib/types";
+import { hasAdminAccess } from "@/lib/utils";
 
 const LESSONS_DIR = path.join(process.cwd(), "content", "lessons");
 
@@ -20,7 +22,7 @@ export interface LessonMeta {
 
 interface AccessUser {
   guid: string;
-  role: "Admin" | "User";
+  role: Role;
 }
 
 export interface StudentSummary {
@@ -142,7 +144,7 @@ function buildLessonMeta(
 /** Lessons visible to this user: all of them for an admin, only unlocked ones otherwise. */
 export async function getLessons(user: AccessUser): Promise<LessonMeta[]> {
   const allSlugs = listLessonSlugs();
-  const isAdmin = user.role === "Admin";
+  const isAdmin = hasAdminAccess(user.role);
 
   const [unlockedSlugs, completion] = await Promise.all([
     isAdmin ? Promise.resolve(new Set(allSlugs)) : getUnlockedLessonSlugs(user.guid),
@@ -164,7 +166,7 @@ export const getLesson = cache(async (user: AccessUser, lessonSlug: string): Pro
     return null;
   }
 
-  if (user.role !== "Admin") {
+  if (!hasAdminAccess(user.role)) {
     const unlockedSlugs = await getUnlockedLessonSlugs(user.guid);
     if (!unlockedSlugs.has(lessonSlug)) {
       return null;

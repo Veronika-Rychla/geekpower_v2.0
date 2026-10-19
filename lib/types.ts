@@ -1,12 +1,14 @@
 // DB types
 
+export type Role = "Admin" | "Teacher" | "User";
+
 // public.users
 export interface User {
   guid: string;
   first_name: string;
   last_name: string;
   email: string;
-  role: "Admin" | "User";
+  role: Role;
   status: "Active" | "Inactive";
   password_hash: string | null;
 }

@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { getUserByEmail } from "@/lib/data";
+import type { Role } from "@/lib/types";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -48,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        return { ...token, role: (user as { role?: "Admin" | "User" }).role };
+        return { ...token, role: (user as { role?: Role }).role };
       }
       return token;
     },

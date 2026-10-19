@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 
 import { auth } from "@/auth";
 import { sql } from "@/app/database";
+import { hasAdminAccess } from "@/lib/utils";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
 import { getInteractions, getQuizIds } from "@/lib/lessons";
@@ -81,7 +82,7 @@ export async function saveInteraction(
 
 export async function unlockLesson(studentGuid: string, lessonSlug: string) {
   const session = await auth();
-  if (session?.user?.role !== "Admin") {
+  if (!session?.user || !hasAdminAccess(session.user.role)) {
     throw new Error("Not authorized");
   }
 
@@ -101,7 +102,7 @@ export async function createStudent(data: {
   status: "Active" | "Inactive";
 }): Promise<{ error: string } | { guid: string }> {
   const session = await auth();
-  if (session?.user?.role !== "Admin") {
+  if (!hasAdminAccess(session?.user?.role)) {
     throw new Error("Not authorized");
   }
 
@@ -172,7 +173,7 @@ export async function updateUser(
   data: { firstName: string; lastName: string; email: string; status: "Active" | "Inactive" },
 ): Promise<{ error: string } | { success: true }> {
   const session = await auth();
-  if (session?.user?.role !== "Admin") {
+  if (!hasAdminAccess(session?.user?.role)) {
     throw new Error("Not authorized");
   }
 

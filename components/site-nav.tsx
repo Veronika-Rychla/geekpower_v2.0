@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { hasAdminAccess } from "@/lib/utils";
 
 export function useNavLinks() {
   const { data: session } = useSession();
@@ -12,7 +13,7 @@ export function useNavLinks() {
 
   return [
     { href: "/lessons", label: "Lessons" },
-    ...(session.user.role === "Admin" ? [{ href: "/students", label: "Students" }] : []),
+    ...(hasAdminAccess(session.user.role) ? [{ href: "/students", label: "Students" }] : []),
   ];
 }
 
