@@ -5,7 +5,7 @@ import remarkFlexibleMarkers from "remark-flexible-markers";
 import { CheckCircle2 } from "lucide-react";
 
 import { auth } from "@/auth";
-import { hasAdminAccess } from "@/lib/utils";
+import { hasTeacherAccess } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Quiz, type QuizProps } from "@/components/lessons/quiz";
 import { completeSublesson } from "@/lib/actions";
@@ -68,7 +68,7 @@ export default async function SublessonPage({
   return (
     <article className="prose prose-invert w-full max-w-3xl px-4 py-10 sm:px-8 sm:py-16">
       {content}
-      {!hasAdminAccess(session.user.role) && (
+      {!hasTeacherAccess(session.user.role) && (
         <form
           action={completeSublesson.bind(null, lessonSlug, sublessonSlug)}
           className="not-prose mt-8 flex flex-col items-start gap-2 border-t border-border pt-6"

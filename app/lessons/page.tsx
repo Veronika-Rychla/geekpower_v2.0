@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { auth } from "@/auth";
-import { hasAdminAccess } from "@/lib/utils";
+import { hasTeacherAccess } from "@/lib/utils";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLessons } from "@/lib/lessons";
 
@@ -11,7 +11,7 @@ export default async function LessonsPage() {
     return null;
   }
   const lessons = await getLessons({ guid: session.user.guid, role: session.user.role });
-  const isAdmin = hasAdminAccess(session.user.role);
+  const isAdmin = hasTeacherAccess(session.user.role);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">

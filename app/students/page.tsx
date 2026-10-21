@@ -2,14 +2,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/auth";
-import { hasAdminAccess } from "@/lib/utils";
+import { hasTeacherAccess } from "@/lib/utils";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateStudentDialog } from "@/components/students/create-student-dialog";
 import { getStudents } from "@/lib/lessons";
 
 export default async function StudentsPage() {
   const session = await auth();
-  if (!hasAdminAccess(session?.user?.role)) {
+  if (!hasTeacherAccess(session?.user?.role)) {
     notFound();
   }
 

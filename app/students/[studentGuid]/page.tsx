@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 
 import { auth } from "@/auth";
-import { hasAdminAccess } from "@/lib/utils";
+import { hasTeacherAccess } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,7 +28,7 @@ export default async function StudentDetailPage({
   const { studentGuid } = await params;
 
   const session = await auth();
-  if (!hasAdminAccess(session?.user?.role)) {
+  if (!hasTeacherAccess(session?.user?.role)) {
     notFound();
   }
 
