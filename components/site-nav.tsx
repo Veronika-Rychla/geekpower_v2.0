@@ -13,7 +13,12 @@ export function useNavLinks() {
 
   return [
     { href: "/lessons", label: "Lessons" },
-    ...(hasTeacherAccess(session.user.role) ? [{ href: "/students", label: "Students" }] : []),
+    ...(hasTeacherAccess(session.user.role)
+      ? [{ href: "/students", label: "Students" }]
+      : []),
+    { href: "/practice", label: "Practice" },
+    { href: "/dictionary", label: "Dictionary" },
+    { href: "/extra", label: "Extra" },
   ];
 }
 
@@ -27,7 +32,11 @@ export function SiteNav() {
   return (
     <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
       {links.map((link) => (
-        <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground">
+        <Link
+          key={link.href}
+          href={link.href}
+          className="transition-colors hover:text-foreground"
+        >
           {link.label}
         </Link>
       ))}
