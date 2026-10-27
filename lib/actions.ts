@@ -191,3 +191,72 @@ export async function updateUser(
   revalidatePath(`/students/${guid}`);
   return { success: true };
 }
+
+const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200;
+
+function validateAnnouncement(data: { title: string; body: string }): { error: string } | { title: string; body: string } {
+  const title = data.title.trim();
+  const body = data.body.trim();
+
+  if (!title) return { error: "Title is required." };
+  if (title.length > ANNOUNCEMENT_TITLE_MAX_LENGTH) {
+    return { error: `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.` };
+  }
+  if (!body) return { error: "Text is required." };
+
+  return { title, body };
+}
+
+export async function createAnnouncement(data: {
+  title: string;
+  body: string;
+}): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!session?.user || !hasTeacherAccess(session.user.role)) {
+    throw new Error("Not authorized");
+  }
+
+  const valid = validateAnnouncement(data);
+  if ("error" in valid) return valid;
+
+  await sql`
+    INSERT INTO announcements (title, body, author_guid)
+    VALUES (${valid.title}, ${valid.body}, ${session.user.guid})
+  `;
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function updateAnnouncement(
+  guid: string,
+  data: { title: string; body: string },
+): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!hasTeacherAccess(session?.user?.role)) {
+    throw new Error("Not authorized");
+  }
+
+  const valid = validateAnnouncement(data);
+  if ("error" in valid) return valid;
+
+  await sql`
+    UPDATE announcements SET title = ${valid.title}, body = ${valid.body}, updated_at = now()
+    WHERE guid = ${guid}
+  `;
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function deleteAnnouncement(guid: string): Promise<{ success: true }> {
+  const session = await auth();
+  if (!hasTeacherAccess(session?.user?.role)) {
+    throw new Error("Not authorized");
+  }
+
+  await sql`DELETE FROM announcements WHERE guid = ${guid}`;
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 
 import { auth } from "@/auth";
-import { hasTeacherAccess } from "@/lib/utils";
+import { formatDateTime, hasTeacherAccess } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,13 +14,6 @@ import {
 import { EditStudentDialog } from "@/components/students/edit-student-dialog";
 import { unlockLesson } from "@/lib/actions";
 import { getStudentDetail } from "@/lib/lessons";
-
-function formatDateTime(isoString: string): string {
-  return new Date(isoString).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 export default async function StudentDetailPage({
   params,

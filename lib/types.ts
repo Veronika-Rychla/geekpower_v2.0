@@ -48,3 +48,22 @@ export interface PasswordResetToken {
   expires_at: string; // timestamp
   created_at: string; // timestamp
 }
+
+// public.announcements
+export interface Announcement {
+  guid: string;
+  title: string;
+  body: string;
+  author_guid: string;
+  created_at: string; // timestamp
+  updated_at: string | null; // timestamp
+}
+
+export interface AnnouncementView {
+  guid: string;
+  title: string;
+  body: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
