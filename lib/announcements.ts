@@ -1,14 +1,14 @@
 import { DateTime } from "luxon";
 
 import { sql } from "@/app/database";
-import type { AnnouncementView } from "@/lib/types";
+import type { AnnouncementType, AnnouncementView } from "@/lib/types";
 
 const ANNOUNCEMENTS_LIMIT = 100;
 
 /** Newest first, with the author's current name joined from users. */
 export async function getAnnouncements(): Promise<AnnouncementView[]> {
   const rows = await sql`
-    SELECT a.guid, a.title, a.body, a.created_at, a.updated_at, u.first_name, u.last_name
+    SELECT a.guid, a.type, a.title, a.body, a.created_at, a.updated_at, u.first_name, u.last_name
     FROM announcements a
     JOIN users u ON u.guid = a.author_guid
     ORDER BY a.created_at DESC
@@ -17,6 +17,7 @@ export async function getAnnouncements(): Promise<AnnouncementView[]> {
 
   return rows.map((row) => ({
     guid: row.guid as string,
+    type: row.type as AnnouncementType,
     title: row.title as string,
     body: row.body as string,
     authorName: `${row.first_name} ${row.last_name}`.trim(),

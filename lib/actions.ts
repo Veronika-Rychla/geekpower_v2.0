@@ -11,6 +11,7 @@ import { requireTeacher } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
 import { getInteractions, getQuizIds, lessonExists } from "@/lib/lessons";
+import { ANNOUNCEMENT_TYPES, type AnnouncementType } from "@/lib/types";
 
 const RESET_TOKEN_TTL_HOURS = 24;
 const PASSWORD_MIN_LENGTH = 8;
@@ -26,6 +27,7 @@ const userSchema = z.object({
   status: z.enum(["Active", "Inactive"]),
 });
 const announcementSchema = z.object({
+  type: z.enum(ANNOUNCEMENT_TYPES),
   title: z
     .string()
     .trim()
@@ -248,6 +250,7 @@ export async function updateUser(
 }
 
 export async function createAnnouncement(input: {
+  type: AnnouncementType;
   title: string;
   body: string;
 }): Promise<{ error: string } | { success: true }> {
@@ -256,8 +259,8 @@ export async function createAnnouncement(input: {
   if ("error" in parsed) return parsed;
 
   await sql`
-    INSERT INTO announcements (title, body, author_guid)
-    VALUES (${parsed.data.title}, ${parsed.data.body}, ${teacher.guid})
+    INSERT INTO announcements (type, title, body, author_guid)
+    VALUES (${parsed.data.type}, ${parsed.data.title}, ${parsed.data.body}, ${teacher.guid})
   `;
 
   revalidatePath("/dashboard");
@@ -266,7 +269,7 @@ export async function createAnnouncement(input: {
 
 export async function updateAnnouncement(
   guidInput: string,
-  input: { title: string; body: string },
+  input: { type: AnnouncementType; title: string; body: string },
 ): Promise<{ error: string } | { success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
@@ -274,7 +277,8 @@ export async function updateAnnouncement(
   if ("error" in parsed) return parsed;
 
   await sql`
-    UPDATE announcements SET title = ${parsed.data.title}, body = ${parsed.data.body}, updated_at = now()
+    UPDATE announcements
+    SET type = ${parsed.data.type}, title = ${parsed.data.title}, body = ${parsed.data.body}, updated_at = now()
     WHERE guid = ${guid}
   `;
 

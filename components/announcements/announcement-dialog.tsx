@@ -6,10 +6,11 @@ import { Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AnnouncementForm } from "@/components/announcements/announcement-form";
+import type { AnnouncementType } from "@/lib/types";
 
 interface AnnouncementDialogProps {
   /** Pass an existing announcement to edit it; omit to create a new one. */
-  announcement?: { guid: string; title: string; body: string };
+  announcement?: { guid: string; type: AnnouncementType; title: string; body: string };
 }
 
 export function AnnouncementDialog({ announcement }: AnnouncementDialogProps) {
@@ -30,7 +31,7 @@ export function AnnouncementDialog({ announcement }: AnnouncementDialogProps) {
       <DialogContent>
         <AnnouncementForm
           guid={announcement?.guid}
-          defaultValues={announcement && { title: announcement.title, body: announcement.body }}
+          defaultValues={announcement && { type: announcement.type, title: announcement.title, body: announcement.body }}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>

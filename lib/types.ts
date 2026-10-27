@@ -49,9 +49,13 @@ export interface PasswordResetToken {
   created_at: Date; // timestamptz
 }
 
+export const ANNOUNCEMENT_TYPES = ["Announcement", "Update"] as const;
+export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
+
 // public.announcements
 export interface Announcement {
   guid: string;
+  type: AnnouncementType;
   title: string;
   body: string;
   author_guid: string;
@@ -61,6 +65,7 @@ export interface Announcement {
 
 export interface AnnouncementView {
   guid: string;
+  type: AnnouncementType;
   title: string;
   body: string;
   authorName: string;

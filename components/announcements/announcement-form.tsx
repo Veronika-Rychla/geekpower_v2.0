@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createAnnouncement, updateAnnouncement } from "@/lib/actions";
+import { ANNOUNCEMENT_TYPES, type AnnouncementType } from "@/lib/types";
 
 interface AnnouncementFields {
+  type: AnnouncementType;
   title: string;
   body: string;
 }
@@ -29,7 +31,7 @@ export function AnnouncementForm({ guid, defaultValues, onSuccess }: Announcemen
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<AnnouncementFields>({
-    defaultValues: defaultValues ?? { title: "", body: "" },
+    defaultValues: defaultValues ?? { type: "Announcement", title: "", body: "" },
   });
 
   const idPrefix = guid ? `announcement-${guid}` : "announcement-new";
@@ -52,6 +54,21 @@ export function AnnouncementForm({ guid, defaultValues, onSuccess }: Announcemen
         <DialogTitle>{guid ? "Edit announcement" : "New announcement"}</DialogTitle>
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={`${idPrefix}-type`}>Type</Label>
+          <select
+            id={`${idPrefix}-type`}
+            className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+            {...register("type", { required: true })}
+          >
+            {ANNOUNCEMENT_TYPES.map((type) => (
+              <option key={type} value={type} className="bg-popover text-popover-foreground">
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-col gap-2">
           <Label htmlFor={`${idPrefix}-title`}>Title</Label>
           <Input
