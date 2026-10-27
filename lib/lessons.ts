@@ -1,8 +1,10 @@
+import "server-only";
+
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 
-import { sql } from "@/app/database";
+import { sql, toIso } from "@/app/database";
 import type { Role } from "@/lib/types";
 import { hasTeacherAccess } from "@/lib/utils";
 
@@ -68,6 +70,10 @@ function listLessonSlugs(): string[] {
     .sort();
 }
 
+export function lessonExists(lessonSlug: string): boolean {
+  return listLessonSlugs().includes(lessonSlug);
+}
+
 function listSublessonSlugs(lessonSlug: string): string[] {
   return fs
     .readdirSync(path.join(LESSONS_DIR, lessonSlug))
@@ -119,7 +125,7 @@ async function getSublessonCompletion(userGuid: string): Promise<Map<string, str
     WHERE user_guid = ${userGuid}
   `;
   return new Map(
-    rows.map((row) => [`${row.lesson_slug}/${row.sublesson_slug}`, row.completed_at as string | null]),
+    rows.map((row) => [`${row.lesson_slug}/${row.sublesson_slug}`, toIso(row.completed_at)]),
   );
 }
 
@@ -162,7 +168,7 @@ export async function getLessons(user: AccessUser): Promise<LessonMeta[]> {
  * (which both need this for the same request) don't each hit fs + DB.
  */
 export const getLesson = cache(async (user: AccessUser, lessonSlug: string): Promise<LessonMeta | null> => {
-  if (!listLessonSlugs().includes(lessonSlug)) {
+  if (!lessonExists(lessonSlug)) {
     return null;
   }
 
@@ -228,7 +234,7 @@ export async function getStudentDetail(studentGuid: string): Promise<{
     getSublessonCompletion(studentGuid),
   ]);
   const unlockedByLesson = new Map(
-    unlockedRows.map((row) => [row.lesson_slug as string, row.unlocked_at as string]),
+    unlockedRows.map((row) => [row.lesson_slug as string, toIso(row.unlocked_at)]),
   );
 
   const lessons = listLessonSlugs().map((lessonSlug) => ({

@@ -1,3 +1,5 @@
+import "server-only";
+
 import { sql } from "@/app/database";
 import { User } from "./types";
 

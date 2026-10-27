@@ -18,7 +18,7 @@ export interface ProgressLesson {
   user_guid: string;
   lesson_slug: string;
   unlocked_by?: string;
-  unlocked_at?: string; // timestamp
+  unlocked_at?: Date; // timestamptz
 }
 
 // progress.sublessons
@@ -26,7 +26,7 @@ export interface ProgressSublesson {
   user_guid: string;
   lesson_slug: string;
   sublesson_slug: string;
-  completed_at?: string; // timestamp
+  completed_at?: Date; // timestamptz
   last_position?: string;
 }
 
@@ -38,15 +38,15 @@ export interface ProgressInteraction {
   interaction_id: string;
   type: string;
   response: unknown;
-  completed_at: string; // timestamp
+  completed_at: Date; // timestamptz
 }
 
 // public.password_reset_tokens
 export interface PasswordResetToken {
   token: string;
   user_guid: string;
-  expires_at: string; // timestamp
-  created_at: string; // timestamp
+  expires_at: Date; // timestamptz
+  created_at: Date; // timestamptz
 }
 
 // public.announcements
@@ -55,8 +55,8 @@ export interface Announcement {
   title: string;
   body: string;
   author_guid: string;
-  created_at: string; // timestamp
-  updated_at: string | null; // timestamp
+  created_at: Date; // timestamptz
+  updated_at: Date | null; // timestamptz
 }
 
 export interface AnnouncementView {
