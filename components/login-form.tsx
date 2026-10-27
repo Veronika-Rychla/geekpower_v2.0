@@ -16,7 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm() {
+export type DevLogin = {
+  label: string;
+  email: string;
+  password: string;
+};
+
+export function LoginForm({ devLogins = [] }: { devLogins?: DevLogin[] }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +30,10 @@ export function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    await logIn(email, password);
+  }
+
+  async function logIn(email: string, password: string) {
     setError(null);
 
     const result = await signIn("credentials", {
@@ -81,6 +91,21 @@ export function LoginForm() {
             Log in
           </Button>
         </form>
+        {devLogins.length > 0 && (
+          <div className="mt-4 flex gap-2 border-t pt-4">
+            {devLogins.map((login) => (
+              <Button
+                key={login.label}
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => logIn(login.email, login.password)}
+              >
+                {login.label}
+              </Button>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
