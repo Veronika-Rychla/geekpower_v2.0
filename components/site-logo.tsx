@@ -23,8 +23,13 @@ export function SiteLogo() {
   }
 
   return (
-    <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-      {content}
-    </Link>
+    <span className="flex items-start">
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-2 font-semibold tracking-tight"
+      >
+        {content}
+      </Link>
+    </span>
   );
 }
