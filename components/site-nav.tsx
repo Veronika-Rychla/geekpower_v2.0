@@ -19,6 +19,7 @@ export function useNavLinks() {
     { href: "/practice", label: "Practice" },
     { href: "/dictionary", label: "Dictionary" },
     { href: "/extra", label: "Extra" },
+    { href: "/blog", label: "Blog" },
   ];
 }
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -11,7 +11,9 @@ import { requireTeacher } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
 import { getInteractions, getQuizIds, lessonExists } from "@/lib/lessons";
-import { ANNOUNCEMENT_TYPES, type AnnouncementType } from "@/lib/types";
+import { ANNOUNCEMENT_TYPES, BLOG_POST_TYPES, type AnnouncementType, type BlogPostType } from "@/lib/types";
+import { estimateReadTime } from "@/lib/utils";
+import { BLOG_POSTS_CACHE_TAG } from "@/lib/blog";
 
 const RESET_TOKEN_TTL_HOURS = 24;
 const PASSWORD_MIN_LENGTH = 8;
@@ -35,6 +37,22 @@ const announcementSchema = z.object({
     .max(ANNOUNCEMENT_TITLE_MAX_LENGTH, `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`),
   body: z.string().trim().min(1, "Text is required.").max(10_000),
 });
+const blogPostSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required.")
+    .max(ANNOUNCEMENT_TITLE_MAX_LENGTH, `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`),
+  summary: z.string().trim().min(1, "Summary is required.").max(1_000, "Summary must be at most 1000 characters."),
+  message: z.string().trim().min(1, "Message is required.").max(100_000),
+  type: z
+    .array(z.enum(BLOG_POST_TYPES))
+    .min(1, "Pick at least one type.")
+    .transform((types) => [...new Set(types)]),
+  isDraft: z.boolean(),
+});
+
+type BlogPostInput = { title: string; summary: string; message: string; type: BlogPostType[]; isDraft: boolean };
 
 /** Parses input that the form validated already; a failure here means a bypassed or buggy client. */
 function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
@@ -293,5 +311,54 @@ export async function deleteAnnouncement(guidInput: string): Promise<{ success: 
   await sql`DELETE FROM announcements WHERE guid = ${guid}`;
 
   revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function createBlogPost(input: BlogPostInput): Promise<{ error: string } | { success: true }> {
+  const teacher = await requireTeacher();
+  const parsed = parseForForm(blogPostSchema, input);
+  if ("error" in parsed) return parsed;
+  const { title, summary, message, type, isDraft } = parsed.data;
+
+  await sql`
+    INSERT INTO blog_posts (title, summary, message, type, is_draft, read_time, author_guid)
+    VALUES (${title}, ${summary}, ${message}, ${type}, ${isDraft}, ${estimateReadTime(message)}, ${teacher.guid})
+  `;
+
+  revalidatePath("/dashboard");
+  revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
+  return { success: true };
+}
+
+export async function updateBlogPost(
+  guidInput: string,
+  input: BlogPostInput,
+): Promise<{ error: string } | { success: true }> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+  const parsed = parseForForm(blogPostSchema, input);
+  if ("error" in parsed) return parsed;
+  const { title, summary, message, type, isDraft } = parsed.data;
+
+  await sql`
+    UPDATE blog_posts
+    SET title = ${title}, summary = ${summary}, message = ${message}, type = ${type},
+        is_draft = ${isDraft}, read_time = ${estimateReadTime(message)}, updated_at = now()
+    WHERE guid = ${guid}
+  `;
+
+  revalidatePath("/dashboard");
+  revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
+  return { success: true };
+}
+
+export async function deleteBlogPost(guidInput: string): Promise<{ success: true }> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+
+  await sql`DELETE FROM blog_posts WHERE guid = ${guid}`;
+
+  revalidatePath("/dashboard");
+  revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
   return { success: true };
 }

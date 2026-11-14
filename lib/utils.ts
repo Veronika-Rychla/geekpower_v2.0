@@ -22,3 +22,11 @@ export function formatDateTime(isoString: string): string {
     .setLocale("cs-CZ")
     .toLocaleString(DateTime.DATETIME_MED);
 }
+
+const READING_WORDS_PER_MINUTE = 200;
+
+/** Estimated reading time in whole minutes (at least 1). */
+export function estimateReadTime(text: string): number {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / READING_WORDS_PER_MINUTE));
+}

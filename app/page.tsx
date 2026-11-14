@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { LoginForm, type DevLogin } from "@/components/login-form";
 
 function getDevLogins(): DevLogin[] {
@@ -19,8 +21,11 @@ function getDevLogins(): DevLogin[] {
 
 export default function Home() {
   return (
-    <div className="flex flex-1 items-center justify-center px-6 py-16">
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-16">
       <LoginForm devLogins={getDevLogins()} />
+      <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground">
+        Read our blog →
+      </Link>
     </div>
   );
 }
