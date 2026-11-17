@@ -4,7 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 
-import { sql, toIso } from "@/app/database";
+import { sql } from "@/app/database";
+import { toIsoOrNull } from "@/lib/dates";
 import type { Role } from "@/lib/types";
 import { hasTeacherAccess } from "@/lib/utils";
 
@@ -125,7 +126,7 @@ async function getSublessonCompletion(userGuid: string): Promise<Map<string, str
     WHERE user_guid = ${userGuid}
   `;
   return new Map(
-    rows.map((row) => [`${row.lesson_slug}/${row.sublesson_slug}`, toIso(row.completed_at)]),
+    rows.map((row) => [`${row.lesson_slug}/${row.sublesson_slug}`, toIsoOrNull(row.completed_at)]),
   );
 }
 
@@ -234,7 +235,7 @@ export async function getStudentDetail(studentGuid: string): Promise<{
     getSublessonCompletion(studentGuid),
   ]);
   const unlockedByLesson = new Map(
-    unlockedRows.map((row) => [row.lesson_slug as string, toIso(row.unlocked_at)]),
+    unlockedRows.map((row) => [row.lesson_slug as string, toIsoOrNull(row.unlocked_at)]),
   );
 
   const lessons = listLessonSlugs().map((lessonSlug) => ({

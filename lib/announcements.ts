@@ -1,6 +1,5 @@
-import { DateTime } from "luxon";
-
 import { sql } from "@/app/database";
+import { toIso, toIsoOrNull } from "@/lib/dates";
 import type { AnnouncementType, AnnouncementView } from "@/lib/types";
 
 const ANNOUNCEMENTS_LIMIT = 100;
@@ -21,8 +20,7 @@ export async function getAnnouncements(): Promise<AnnouncementView[]> {
     title: row.title as string,
     body: row.body as string,
     authorName: `${row.first_name} ${row.last_name}`.trim(),
-    // Neon returns timestamptz columns as JS Dates
-    createdAt: DateTime.fromJSDate(row.created_at as Date).toISO()!,
-    updatedAt: row.updated_at ? DateTime.fromJSDate(row.updated_at as Date).toISO() : null,
+    createdAt: toIso(row.created_at),
+    updatedAt: toIsoOrNull(row.updated_at),
   }));
 }

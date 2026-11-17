@@ -3,7 +3,8 @@ import Link from "next/link";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 
 import { auth } from "@/auth";
-import { formatDateTime, hasTeacherAccess } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dates";
+import { hasTeacherAccess } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,

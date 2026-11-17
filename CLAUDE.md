@@ -25,7 +25,7 @@ Required env (`.env`): `DATABASE_URL`, `AUTH_SECRET`, `RESEND_API_KEY`, `RESEND_
 - Prefer named exports
 - All API routes go in app/api/
 - Use server actions instead of API routes where possible
-- Use Luxon's `DateTime` for dates and times instead of the built-in `Date` object. Use `Date` only at boundaries that hand it to you (e.g. Neon returns `timestamptz` as `Date`: wrap it with `DateTime.fromJSDate`)
+- Dates travel through the app as ISO 8601 strings (they must be serializable to cross from server to client components). Convert DB `Date`s at the data layer with `toIso`/`toIsoOrNull`, and format or compare only via helpers in `lib/dates.ts` (Czech locale, `Europe/Prague` zone); add a helper there rather than using `Date` ad hoc. Prefer `now()`/interval math in SQL for stored data.
 
 ## Structure
 
@@ -45,7 +45,7 @@ GeekPower is an English-for-IT course app (UI and lesson content are in Czech).
 
 ## Design system
 
-shadcn components (style `base-vega`, built on `@base-ui/react`, lucide icons) live in `components/ui/`; add new ones with the shadcn CLI. Use `cn()` from `lib/utils.ts` for class merging and `formatDateTime()` for showing timestamps (Czech locale).
+shadcn components (style `base-vega`, built on `@base-ui/react`, lucide icons) live in `components/ui/`; add new ones with the shadcn CLI. Use `cn()` from `lib/utils.ts` for class merging and `formatDateTime()` from `lib/dates.ts` for showing timestamps.
 
 <!-- - No hard-coded colors, px values or inline styles. -->
 
