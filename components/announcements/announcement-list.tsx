@@ -2,7 +2,8 @@ import type { AnnouncementType, AnnouncementView } from "@/lib/types";
 import { formatDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { AnnouncementDialog } from "@/components/announcements/announcement-dialog";
-import { DeleteAnnouncementDialog } from "@/components/announcements/delete-announcement-dialog";
+import { DeleteDialog } from "@/components/delete-dialog";
+import { deleteAnnouncement } from "@/lib/actions";
 
 const TYPE_STYLES: Record<AnnouncementType, { border: string; badge: string }> = {
   Announcement: { border: "border-l-sky-500", badge: "bg-sky-500/10 text-sky-700 dark:text-sky-300" },
@@ -40,7 +41,11 @@ export function AnnouncementList({ announcements, canManage = false }: Announcem
             {canManage && (
               <div className="-mt-1 flex shrink-0 gap-1">
                 <AnnouncementDialog announcement={announcement} />
-                <DeleteAnnouncementDialog guid={announcement.guid} title={announcement.title} />
+                <DeleteDialog
+                  itemLabel="announcement"
+                  title={announcement.title}
+                  onDelete={deleteAnnouncement.bind(null, announcement.guid)}
+                />
               </div>
             )}
           </div>

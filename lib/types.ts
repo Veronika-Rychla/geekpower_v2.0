@@ -69,6 +69,50 @@ export interface AnnouncementView {
   title: string;
   body: string;
   authorName: string;
-  createdAt: string;
-  updatedAt: string | null;
+  createdAt: string; // timestamptz
+  updatedAt: string | null; // timestamptz
+}
+
+export interface ContactMessage {
+  guid: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: string; // timestamptz
+}
+
+export const BLOG_POST_TYPES = [
+  "Vocabulary",
+  "Meetings",
+  "Career",
+  "Study skills",
+  "Opinion",
+] as const;
+export type BlogPostType = (typeof BLOG_POST_TYPES)[number];
+
+// public.blog_posts
+export interface BlogPost {
+  guid: string;
+  title: string;
+  summary: string;
+  message: string;
+  type: BlogPostType[];
+  is_draft: boolean;
+  read_time: number; // minutes
+  author_guid: string;
+  created_at: Date; // timestamptz
+  updated_at: Date | null; // timestamptz
+}
+
+export interface BlogMessage {
+  guid: string;
+  title: string;
+  summary: string;
+  message: string;
+  type: BlogPostType[];
+  isDraft: boolean;
+  readTime: number; // minutes
+  authorName: string;
+  createdAt: string; // timestamptz
+  updatedAt: string | null; // timestamptz
 }

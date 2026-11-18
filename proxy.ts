@@ -3,9 +3,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 const PUBLIC_PATHS = ["/", "/forgot-password", "/set-password"];
+/** Readable by everyone, signed in or not (no redirect either way). */
+const OPEN_PATH_PREFIXES = ["/blog"];
 
 export default auth((req) => {
-  const isPublic = PUBLIC_PATHS.includes(req.nextUrl.pathname);
+  const { pathname } = req.nextUrl;
+  if (OPEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return;
+  }
+
+  const isPublic = PUBLIC_PATHS.includes(pathname);
 
   if (!req.auth && !isPublic) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
