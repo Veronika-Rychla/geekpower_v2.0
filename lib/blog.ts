@@ -1,8 +1,8 @@
 import { unstable_cache } from "next/cache";
-import { DateTime } from "luxon";
 import { z } from "zod";
 
 import { sql } from "@/app/database";
+import { toIso, toIsoOrNull } from "@/lib/dates";
 import type { BlogMessage, BlogPostType } from "@/lib/types";
 
 const BLOG_POSTS_LIMIT = 100;
@@ -17,11 +17,8 @@ function toBlogMessage(row: Record<string, unknown>): BlogMessage {
     isDraft: row.is_draft as boolean,
     readTime: row.read_time as number,
     authorName: `${row.first_name} ${row.last_name}`.trim(),
-    // Neon returns timestamptz columns as JS Dates
-    createdAt: DateTime.fromJSDate(row.created_at as Date).toISO()!,
-    updatedAt: row.updated_at
-      ? DateTime.fromJSDate(row.updated_at as Date).toISO()
-      : null,
+    createdAt: toIso(row.created_at),
+    updatedAt: toIsoOrNull(row.updated_at),
   };
 }
 

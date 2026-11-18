@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import type { BlogMessage } from "@/lib/types";
 import { deleteBlogPost } from "@/lib/actions";
-import { cn, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
 import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";

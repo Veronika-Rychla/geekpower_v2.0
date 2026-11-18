@@ -1,7 +1,5 @@
 import "server-only";
 
-import { DateTime } from "luxon";
-
 /** Upper bound on tracked clients, so a flood of spoofed IPs can't grow memory without limit. */
 const MAX_TRACKED_CLIENTS = 10_000;
 
@@ -25,7 +23,7 @@ export function createRateLimiter({
     allowed: boolean;
     retryAfterSeconds: number;
   } {
-    const now = DateTime.now().toMillis();
+    const now = Date.now();
     let entry = windows.get(key);
 
     if (!entry || entry.resetAt <= now) {

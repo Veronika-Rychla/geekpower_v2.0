@@ -3,7 +3,8 @@ import Link from "next/link";
 
 import { getBlogPosts } from "@/lib/blog";
 import { getCurrentUser } from "@/lib/guards";
-import { formatDateTime, hasTeacherAccess } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dates";
+import { hasTeacherAccess } from "@/lib/utils";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
 import {
   Card,

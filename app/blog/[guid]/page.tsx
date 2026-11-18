@@ -5,7 +5,8 @@ import { cache } from "react";
 
 import { getCurrentUser } from "@/lib/guards";
 import { getBlogPost } from "@/lib/blog";
-import { formatDateTime, hasTeacherAccess } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dates";
+import { hasTeacherAccess } from "@/lib/utils";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
 
 /** Cached so metadata and the page share one query. */

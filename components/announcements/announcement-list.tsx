@@ -1,5 +1,6 @@
 import type { AnnouncementType, AnnouncementView } from "@/lib/types";
-import { cn, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import { AnnouncementDialog } from "@/components/announcements/announcement-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";
 import { deleteAnnouncement } from "@/lib/actions";
