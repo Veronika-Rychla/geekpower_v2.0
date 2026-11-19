@@ -26,7 +26,9 @@ function baseHeaders(request: Request, cacheControl: string): Headers {
   const origin = request.headers.get("origin");
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
-    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    // JSON POSTs send Content-Type: application/json, which the preflight must allow
+    headers.set("Access-Control-Allow-Headers", "Content-Type");
     headers.set("Access-Control-Max-Age", "86400");
   }
 
@@ -53,9 +55,15 @@ export function publicPreflight(request: Request): Response {
   });
 }
 
-/** Returns a 429 response when the caller is over the rate limit, otherwise null. */
-export function rejectIfRateLimited(request: Request): Response | null {
-  const { allowed, retryAfterSeconds } = checkRateLimit(getClientIp(request));
+/**
+ * Returns a 429 response when the caller is over the rate limit, otherwise null.
+ * Pass `check` to use a route-specific limiter instead of the shared one.
+ */
+export function rejectIfRateLimited(
+  request: Request,
+  check: ReturnType<typeof createRateLimiter> = checkRateLimit,
+): Response | null {
+  const { allowed, retryAfterSeconds } = check(getClientIp(request));
   if (allowed) {
     return null;
   }

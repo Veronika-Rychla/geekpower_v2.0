@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DashboardSectionProps {
-  title: string;
+  title: ReactNode;
   /** Rendered in the top-right corner of the header, e.g. a "New" button. */
   actions?: ReactNode;
   children: ReactNode;

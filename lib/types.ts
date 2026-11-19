@@ -73,12 +73,23 @@ export interface AnnouncementView {
   updatedAt: string | null; // timestamptz
 }
 
+// public.contact_messages
+export interface ContactFormMessage {
+  guid: string;
+  name: string;
+  email: string;
+  message: string;
+  created_at: Date; // timestamptz
+  resolved: boolean; // default false
+}
+
 export interface ContactMessage {
   guid: string;
   name: string;
   email: string;
   message: string;
   createdAt: string; // timestamptz
+  resolved: boolean;
 }
 
 export const BLOG_POST_TYPES = [

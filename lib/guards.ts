@@ -4,7 +4,7 @@ import { cache } from "react";
 
 import { auth } from "@/auth";
 import type { Role } from "@/lib/types";
-import { hasTeacherAccess } from "@/lib/utils";
+import { hasAdminAccess, hasTeacherAccess } from "@/lib/utils";
 
 export interface CurrentUser {
   guid: string;
@@ -37,6 +37,15 @@ export async function requireUser(): Promise<CurrentUser> {
 export async function requireTeacher(): Promise<CurrentUser> {
   const user = await requireUser();
   if (!hasTeacherAccess(user.role)) {
+    throw new Error("Not authorized");
+  }
+  return user;
+}
+
+/** For server actions: throws unless the signed-in user is an Admin. */
+export async function requireAdmin(): Promise<CurrentUser> {
+  const user = await requireUser();
+  if (!hasAdminAccess(user.role)) {
     throw new Error("Not authorized");
   }
   return user;

@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { sql } from "@/app/database";
-import { requireTeacher } from "@/lib/guards";
+import { requireAdmin, requireTeacher } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
 import { getInteractions, getQuizIds, lessonExists } from "@/lib/lessons";
@@ -360,5 +360,26 @@ export async function deleteBlogPost(guidInput: string): Promise<{ success: true
 
   revalidatePath("/dashboard");
   revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
+  return { success: true };
+}
+
+export async function setContactMessageResolved(guidInput: string, resolvedInput: boolean): Promise<{ success: true }> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+  const resolved = parseOrThrow(z.boolean(), resolvedInput);
+
+  await sql`UPDATE contact_messages SET resolved = ${resolved} WHERE guid = ${guid}`;
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function deleteContactMessage(guidInput: string): Promise<{ success: true }> {
+  await requireAdmin();
+  const guid = parseOrThrow(guidSchema, guidInput);
+
+  await sql`DELETE FROM contact_messages WHERE guid = ${guid}`;
+
+  revalidatePath("/dashboard");
   return { success: true };
 }
