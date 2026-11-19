@@ -1,8 +1,7 @@
 import type { AnnouncementView, BlogMessage, ContactMessage } from "@/lib/types";
 import { AnnouncementDialog } from "@/components/announcements/announcement-dialog";
 import { AnnouncementList } from "@/components/announcements/announcement-list";
-import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
-import { BlogPostList } from "@/components/blog/blog-post-list";
+import { BlogPostList, NewBlogPostLink } from "@/components/blog/blog-post-list";
 import { ContactMessagesSection } from "@/components/contact/contact-messages-section";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 
@@ -20,7 +19,7 @@ export function TeacherDashboard({ announcements, blogPosts, contactMessages }: 
         <DashboardSection title="Announcements" actions={<AnnouncementDialog />}>
           <AnnouncementList announcements={announcements} canManage />
         </DashboardSection>
-        <DashboardSection title="Blog" actions={<BlogPostDialog />}>
+        <DashboardSection title="Blog" actions={<NewBlogPostLink />}>
           <BlogPostList posts={blogPosts} canManage />
         </DashboardSection>
         <ContactMessagesSection messages={contactMessages} />

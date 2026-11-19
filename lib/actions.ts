@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { randomUUID, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -12,8 +13,9 @@ import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
 import { getInteractions, getQuizIds, lessonExists } from "@/lib/lessons";
 import { ANNOUNCEMENT_TYPES, BLOG_POST_TYPES, type AnnouncementType, type BlogPostType } from "@/lib/types";
-import { estimateReadTime } from "@/lib/utils";
 import { BLOG_POSTS_CACHE_TAG } from "@/lib/blog";
+import { signBlogImageUpload, type SignedImageUpload } from "@/lib/cloudinary";
+import { estimateReadTime } from "@/components/blog/markdown/read-time";
 
 const RESET_TOKEN_TTL_HOURS = 24;
 const PASSWORD_MIN_LENGTH = 8;
@@ -314,26 +316,30 @@ export async function deleteAnnouncement(guidInput: string): Promise<{ success: 
   return { success: true };
 }
 
-export async function createBlogPost(input: BlogPostInput): Promise<{ error: string } | { success: true }> {
+export async function createBlogPost(
+  input: BlogPostInput,
+): Promise<{ error: string } | { success: true; guid: string }> {
   const teacher = await requireTeacher();
   const parsed = parseForForm(blogPostSchema, input);
   if ("error" in parsed) return parsed;
   const { title, summary, message, type, isDraft } = parsed.data;
 
-  await sql`
+  const [row] = await sql`
     INSERT INTO blog_posts (title, summary, message, type, is_draft, read_time, author_guid)
     VALUES (${title}, ${summary}, ${message}, ${type}, ${isDraft}, ${estimateReadTime(message)}, ${teacher.guid})
+    RETURNING guid
   `;
 
   revalidatePath("/dashboard");
+  revalidatePath("/blog", "layout");
   revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
-  return { success: true };
+  return { success: true, guid: row.guid as string };
 }
 
 export async function updateBlogPost(
   guidInput: string,
   input: BlogPostInput,
-): Promise<{ error: string } | { success: true }> {
+): Promise<{ error: string } | { success: true; guid: string }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
   const parsed = parseForForm(blogPostSchema, input);
@@ -348,18 +354,35 @@ export async function updateBlogPost(
   `;
 
   revalidatePath("/dashboard");
+  revalidatePath("/blog", "layout");
   revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
-  return { success: true };
+  return { success: true, guid };
 }
 
-export async function deleteBlogPost(guidInput: string): Promise<{ success: true }> {
+/** Signed parameters for uploading one blog image from the browser straight to Cloudinary. */
+export async function createBlogImageUpload(): Promise<{ error: string } | SignedImageUpload> {
+  await requireTeacher();
+  const upload = signBlogImageUpload();
+  if (!upload) {
+    console.error("Cloudinary env vars are not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)");
+    return { error: "Image upload is not configured." };
+  }
+  return upload;
+}
+
+/** With `redirectToBlog`, navigates to /blog afterwards (used on the deleted post's own page). */
+export async function deleteBlogPost(guidInput: string, redirectToBlog = false): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
 
   await sql`DELETE FROM blog_posts WHERE guid = ${guid}`;
 
   revalidatePath("/dashboard");
+  revalidatePath("/blog", "layout");
   revalidateTag(BLOG_POSTS_CACHE_TAG, "max");
+  if (redirectToBlog === true) {
+    redirect("/blog");
+  }
   return { success: true };
 }
 

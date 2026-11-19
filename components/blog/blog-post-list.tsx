@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 
 import type { BlogMessage } from "@/lib/types";
-import { deleteBlogPost } from "@/lib/actions";
 import { formatDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { BlogPostActions } from "@/components/blog/blog-post-actions";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
-import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
-import { DeleteDialog } from "@/components/delete-dialog";
+import { BlogMarkdown } from "@/components/blog/markdown/blog-markdown";
+import { buttonVariants } from "@/components/ui/button";
 
 interface BlogPostListProps {
   posts: BlogMessage[];
@@ -41,14 +42,11 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
               </h3>
             </div>
             {canManage && (
-              <div className="-mt-1 flex shrink-0 gap-1">
-                <BlogPostDialog post={post} />
-                <DeleteDialog
-                  itemLabel="blog post"
-                  title={post.title}
-                  onDelete={deleteBlogPost.bind(null, post.guid)}
-                />
-              </div>
+              <BlogPostActions
+                guid={post.guid}
+                title={post.title}
+                className="-mt-1"
+              />
             )}
           </div>
           <p className="whitespace-pre-wrap text-muted-foreground">
@@ -63,7 +61,9 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
                 · {post.readTime} min read
               </span>
             </summary>
-            <p className="mt-2 whitespace-pre-wrap">{post.message}</p>
+            <div className="prose prose-sm prose-invert mt-2 max-w-none">
+              <BlogMarkdown content={post.message} />
+            </div>
           </details>
           <p className="text-right text-xs text-muted-foreground">
             {post.authorName} · {formatDateTime(post.createdAt)}
@@ -72,5 +72,15 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** "New" button for the dashboard's Blog section; opens the full-page editor. */
+export function NewBlogPostLink() {
+  return (
+    <Link href="/blog/new" className={buttonVariants({ size: "sm" })}>
+      <Plus className="size-3.5" />
+      New
+    </Link>
   );
 }

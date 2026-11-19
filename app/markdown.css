@@ -1,0 +1,50 @@
+/*
+ * Styles for rendered Markdown (lessons and blog). Shared with the public
+ * website together with components/blog/markdown/, so keep it self-contained:
+ * it only relies on the shadcn theme variables (--primary, --border, --muted,
+ * --radius-lg).
+ */
+@layer components {
+  .flexible-marker {
+    background-color: color-mix(in oklch, var(--primary), transparent 80%);
+    color: inherit;
+    border-radius: 0.2em;
+    padding: 0 0.2em;
+  }
+
+  .callout {
+    margin: 1.5rem 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background-color: var(--muted);
+    padding: 1rem;
+  }
+
+  .callout-title {
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .callout-tip,
+  .callout-success {
+    border-color: color-mix(in oklch, var(--border), oklch(0.7 0.15 150) 50%);
+  }
+
+  .callout-info,
+  .callout-question {
+    border-color: color-mix(in oklch, var(--border), oklch(0.7 0.15 250) 50%);
+  }
+
+  .video-embed {
+    margin: 1.5rem 0;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+
+  .video-embed iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: var(--radius-lg);
+  }
+}

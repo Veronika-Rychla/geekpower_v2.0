@@ -17,7 +17,7 @@ React 19, TypeScript strict, Next.js 16 (App Router) as fullstack app connected 
 - `npx tsc --noEmit`: type check only
 - `npx prettier --write <path>`: format
 
-Required env (`.env`): `DATABASE_URL`, `AUTH_SECRET`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_URL` (used to build links in emails).
+Required env (`.env`): `DATABASE_URL`, `AUTH_SECRET`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_URL` (used to build links in emails), `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (blog image uploads).
 
 # Code Style
 
@@ -42,6 +42,7 @@ GeekPower is an English-for-IT course app (UI and lesson content are in Czech).
 - **Data layer**: `app/database/index.ts` exports the Neon `sql` tagged template. It's raw SQL with no ORM and no migrations in the repo. The schema exists only in Neon; `lib/types.ts` documents the tables (`public.users`, `public.announcements`, `public.password_reset_tokens`, `progress.lessons`, `progress.sublessons`, `progress.interactions`). Reads live in `lib/data.ts`, `lib/lessons.ts` and `lib/announcements.ts`. All mutations are server actions in `lib/actions.ts`; each one checks the session/role itself and calls `revalidatePath`.
 - **Lessons are files, progress is DB**: each lesson is a folder `content/lessons/<NN-slug>/`, and each sublesson is a `<NN-slug>.mdx` file inside it. Order comes from the numeric prefix. The title comes from the first markdown heading, falling back to the slug. The DB stores only slugs (unlocks, completion, interaction responses), so renaming a file orphans its progress rows.
 - **MDX rendering**: `app/lessons/[lessonSlug]/[sublessonSlug]/page.tsx` compiles MDX with `next-mdx-remote/rsc` (`blockJS: false`) plus remark-gfm, remark-flexible-markers (`==highlight==`) and `lib/mdx/remark-callouts.ts` (Obsidian-style `> [!info]- Title` callouts). The only custom MDX component is `<Quiz id question options correctId>`. Quiz answers are stored in `progress.interactions` keyed by `id`, so each `id` must be unique within its sublesson. A student can complete a sublesson only after answering every quiz in it correctly. `completeSublesson` enforces this, finding quiz ids in the source with a regex.
+- **Blog**: posts are Markdown in `blog_posts.message`, written in the full-page editor (`/blog/new`, `/blog/[guid]/edit`, `components/blog/editor/`). The public JSON API in `app/api/blog/` serves them to the separate public website, which renders them with a copy of `components/blog/markdown/` + `lib/mdx/remark-callouts.ts` + `app/markdown.css`, so keep that renderer self-contained and change both sites together. A bare YouTube URL in its own paragraph becomes an embed, and a single newline is a line break (remark-breaks). Images are uploaded from the browser straight to Cloudinary with parameters signed by the `createBlogImageUpload` action (`lib/cloudinary.ts`), and the Markdown stores the absolute Cloudinary URL.
 
 ## Design system
 

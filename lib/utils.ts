@@ -15,11 +15,3 @@ export function hasAdminAccess(role: Role | undefined): boolean {
 export function hasTeacherAccess(role: Role | undefined): boolean {
   return hasAdminAccess(role) || role === "Teacher";
 }
-
-const READING_WORDS_PER_MINUTE = 200;
-
-/** Estimated reading time in whole minutes (at least 1). */
-export function estimateReadTime(text: string): number {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / READING_WORDS_PER_MINUTE));
-}
