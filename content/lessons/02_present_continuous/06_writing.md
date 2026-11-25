@@ -1,0 +1,19 @@
+## 📝 Writing
+
+Napiš krátký text o projektu, na kterém právě pracuješ. Pokud v IT ještě nepracuješ, piš třeba o cvičném projektu, na kterém se něco učíš, nebo o právě probíhajícím kurzu, kterého se účastníš.
+
+> I am working on a new coding project for my company. I am creating a new feature for the company’s website. Right now, I am focusing on the layout and design. I am also checking the code for any errors. I am fixing bugs as I find them. I usually work on front-end development, but today I am also trying some back-end tasks.
+>
+> My colleague is helping me with the project. He is testing the new feature and giving me feedback. We are discussing the issues and are solving them together. We are both very busy, but we are making good progress. We are aiming to finish the project by the end of the week.
+
+#### Sentence openers
+
+🖋 I am currently...
+🖋 Right now, I am...
+🖋 At the moment, I am...
+🖋 I am in the middle of...
+🖋 My colleague is...
+🖋 I usually... but today I am...
+
+> [!idea] Present simple a present continuous fungují v symbióze
+> I když je ukázkový text pro demonstraci napsaný téměř ze sta procent v přítomném čase průběhovém, přirozené texty jsou ve skutečnosti spíše ladnou symbiózou více časů. Často totiž chceme poukázat na to, jak se to, čím se zabýváme zrovna teď, liší od naší rutinní pracovní náplně.
