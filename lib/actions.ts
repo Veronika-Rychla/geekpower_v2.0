@@ -11,7 +11,7 @@ import { sql } from "@/app/database";
 import { requireAdmin, requireTeacher } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
-import { getInteractions, getQuizIds, lessonExists } from "@/lib/lessons";
+import { getInteractions, getLessons, getQuizIds, lessonExists } from "@/lib/lessons";
 import { ANNOUNCEMENT_TYPES, BLOG_POST_TYPES, type AnnouncementType, type BlogPostType } from "@/lib/types";
 import { BLOG_POSTS_CACHE_TAG } from "@/lib/blog";
 import { signBlogImageUpload, type SignedImageUpload } from "@/lib/cloudinary";
@@ -112,6 +112,37 @@ export async function completeSublesson(lessonSlug: string, sublessonSlug: strin
   `;
 
   revalidatePath(`/lessons/${lessonSlug}`, "layout");
+
+  // Move on to the next sublesson, or to the next unlocked lesson after the last one.
+  const role = session?.user?.role;
+  const nextHref = role
+    ? await getNextSublessonHref({ guid: userGuid, role }, lessonSlug, sublessonSlug)
+    : null;
+  if (nextHref) {
+    redirect(nextHref);
+  }
+}
+
+async function getNextSublessonHref(
+  user: Parameters<typeof getLessons>[0],
+  lessonSlug: string,
+  sublessonSlug: string,
+): Promise<string | null> {
+  const lessons = await getLessons(user);
+  const lessonIndex = lessons.findIndex((l) => l.slug === lessonSlug);
+  if (lessonIndex === -1) {
+    return null;
+  }
+
+  const sublessons = lessons[lessonIndex].sublessons;
+  const next = sublessons[sublessons.findIndex((s) => s.slug === sublessonSlug) + 1];
+  if (next) {
+    return `/lessons/${lessonSlug}/${next.slug}`;
+  }
+
+  // The lesson index route resumes at the first unfinished sublesson.
+  const nextLesson = lessons.slice(lessonIndex + 1).find((l) => l.sublessons.length > 0);
+  return nextLesson ? `/lessons/${nextLesson.slug}` : null;
 }
 
 export async function saveInteraction(

@@ -16,5 +16,7 @@ export default async function LessonIndexPage({ params }: PageProps<"/lessons/[l
     notFound();
   }
 
-  redirect(`/lessons/${lesson.slug}/${lesson.sublessons[0].slug}`);
+  // Resume at the first unfinished sublesson; once everything is done, start from the beginning.
+  const target = lesson.sublessons.find((s) => !s.completedAt) ?? lesson.sublessons[0];
+  redirect(`/lessons/${lesson.slug}/${target.slug}`);
 }
