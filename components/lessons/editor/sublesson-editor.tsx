@@ -150,6 +150,7 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
         <SlugField
           id={`${idPrefix}-slug`}
           error={errors.slug?.message}
+          kind="section"
           warnOnChange={!!sublesson}
           {...register("slug", slugRules)}
         />

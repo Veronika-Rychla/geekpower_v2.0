@@ -58,11 +58,11 @@ const lessonSchema = z.object({
   slug: z
     .string()
     .trim()
-    .min(1, "Slug is required.")
-    .max(SLUG_MAX_LENGTH, `Slug must be at most ${SLUG_MAX_LENGTH} characters.`)
+    .min(1, "Name in URL is required.")
+    .max(SLUG_MAX_LENGTH, `Name in URL must be at most ${SLUG_MAX_LENGTH} characters.`)
     .regex(
       SLUG_PATTERN,
-      "Slug may contain only lowercase letters, digits and single dashes.",
+      "Name in URL may contain only lowercase letters, digits and single dashes.",
     ),
   isDraft: z.boolean(),
 });
@@ -315,7 +315,7 @@ export async function createLesson(input: LessonInput): Promise<ContentResult> {
     `;
   } catch (error) {
     if (isUniqueViolation(error))
-      return { error: "Another lesson already uses this slug." };
+      return { error: "Another lesson already uses this name in URL." };
     throw error;
   }
 
@@ -343,7 +343,7 @@ export async function updateLesson(
     if (updated.length === 0) throw new Error("Not found");
   } catch (error) {
     if (isUniqueViolation(error))
-      return { error: "Another lesson already uses this slug." };
+      return { error: "Another lesson already uses this name in URL." };
     throw error;
   }
 
@@ -418,7 +418,7 @@ export async function createSublesson(
   } catch (error) {
     if (isUniqueViolation(error))
       return {
-        error: "Another section of this lesson already uses this slug.",
+        error: "Another section of this lesson already uses this name in URL.",
       };
     throw error;
   }
@@ -451,7 +451,7 @@ export async function updateSublesson(
   } catch (error) {
     if (isUniqueViolation(error))
       return {
-        error: "Another section of this lesson already uses this slug.",
+        error: "Another section of this lesson already uses this name in URL.",
       };
     throw error;
   }

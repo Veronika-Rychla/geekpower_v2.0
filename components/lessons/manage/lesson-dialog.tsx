@@ -31,7 +31,7 @@ interface LessonDialogProps {
   lesson?: { guid: string } & LessonFields;
 }
 
-/** Create or edit a lesson's title, URL slug and draft state. Its sections are edited separately. */
+/** Create or edit a lesson's title, name in URL (slug) and draft state. Its sections are edited separately. */
 export function LessonDialog({ lesson }: LessonDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -112,6 +112,7 @@ function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () =
         <SlugField
           id={`${idPrefix}-slug`}
           error={errors.slug?.message}
+          kind="lesson"
           warnOnChange={!!lesson}
           {...register("slug", slugRules)}
         />
@@ -135,28 +136,36 @@ function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () =
 }
 
 export const slugRules = {
-  validate: (value: string) => value.trim().length > 0 || "Slug is required",
-  maxLength: { value: SLUG_MAX_LENGTH, message: `Slug must be at most ${SLUG_MAX_LENGTH} characters` },
+  validate: (value: string) => value.trim().length > 0 || "Name in URL is required",
+  maxLength: { value: SLUG_MAX_LENGTH, message: `Name in URL must be at most ${SLUG_MAX_LENGTH} characters` },
   pattern: { value: SLUG_PATTERN, message: "Use lowercase letters, digits and single dashes only" },
 };
 
-/** The URL slug input, shared by the lesson dialog and the section editor. */
+/** The URL slug input ("Name in URL"), shared by the lesson dialog and the section editor. */
 export function SlugField({
   id,
   error,
   warnOnChange,
+  kind,
   ...props
-}: React.ComponentProps<typeof Input> & { id: string; error?: string; warnOnChange?: boolean }) {
+}: React.ComponentProps<typeof Input> & {
+  id: string;
+  error?: string;
+  warnOnChange?: boolean;
+  kind: "lesson" | "section";
+}) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>URL slug</Label>
+      <Label htmlFor={id}>Name in URL</Label>
       <Input id={id} aria-invalid={!!error} className="font-mono" {...props} />
       {error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : (
-        warnOnChange && (
-          <p className="text-xs text-muted-foreground">Changing it changes the page&apos;s address (old links stop working).</p>
-        )
+        <p className="text-xs text-muted-foreground">
+          The name this {kind} appears as in the page&apos;s web address (URL). Lowercase letters, digits and dashes
+          only, e.g. <span className="font-mono">{kind === "lesson" ? "it-basics" : "new-words"}</span>.
+          {warnOnChange && " Changing it changes the address, so old links stop working."}
+        </p>
       )}
     </div>
   );
