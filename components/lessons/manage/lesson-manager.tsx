@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { GripVertical, Pencil, Plus } from "lucide-react";
+import { Check, GripVertical, Pencil, Plus } from "lucide-react";
 import {
   closestCenter,
   DndContext,
@@ -27,7 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteDialog } from "@/components/delete-dialog";
 import { LessonDialog } from "@/components/lessons/manage/lesson-dialog";
@@ -117,15 +117,20 @@ function SortableList<T extends { guid: string }>({
   );
 }
 
-/** An item of a `SortableList`, dragged by the handle it renders before `children`. */
+/**
+ * An item of a `SortableList`, dragged by the handle it renders before `children`.
+ * With `disabled` it has no handle and can't be dragged.
+ */
 function SortableItem({
   id,
   handleLabel,
+  disabled = false,
   className,
   children,
 }: {
   id: string;
   handleLabel: string;
+  disabled?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -137,9 +142,7 @@ function SortableItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id,
-  });
+  } = useSortable({ id, disabled });
 
   return (
     <li
@@ -151,20 +154,22 @@ function SortableItem({
         className,
       )}
     >
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        aria-label={handleLabel}
-        title={handleLabel}
-        className={cn(
-          buttonVariants({ variant: "ghost", size: "icon-sm" }),
-          "shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing",
-        )}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="size-3.5" />
-      </button>
+      {!disabled && (
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          aria-label={handleLabel}
+          title={handleLabel}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon-sm" }),
+            "shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing",
+          )}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-3.5" />
+        </button>
+      )}
       <div className="min-w-0 flex-1">{children}</div>
     </li>
   );
@@ -173,9 +178,11 @@ function SortableItem({
 function SublessonRow({
   lesson,
   sublesson,
+  editing,
 }: {
   lesson: LessonMeta;
   sublesson: SublessonMeta;
+  editing: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted/50">
@@ -191,27 +198,35 @@ function SublessonRow({
         </Link>
         {sublesson.isDraft && <DraftBadge />}
       </div>
-      <div className="flex shrink-0 items-center">
-        <Link
-          href={`/lesson-editor/${sublesson.guid}`}
-          aria-label="Edit section"
-          title="Edit section"
-          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-        >
-          <Pencil className="size-3.5" />
-        </Link>
-        <DeleteDialog
-          itemLabel="section"
-          title={sublesson.title}
-          description="Every student's progress in it is deleted too."
-          onDelete={deleteSublesson.bind(null, sublesson.guid)}
-        />
-      </div>
+      {editing && (
+        <div className="flex shrink-0 items-center">
+          <Link
+            href={`/lesson-editor/${sublesson.guid}`}
+            aria-label="Edit section"
+            title="Edit section"
+            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+          >
+            <Pencil className="size-3.5" />
+          </Link>
+          <DeleteDialog
+            itemLabel="section"
+            title={sublesson.title}
+            description="Every student's progress in it is deleted too."
+            onDelete={deleteSublesson.bind(null, sublesson.guid)}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-function LessonCard({ lesson }: { lesson: LessonMeta }) {
+function LessonCard({
+  lesson,
+  editing,
+}: {
+  lesson: LessonMeta;
+  editing: boolean;
+}) {
   return (
     <Card className={cn(lesson.isDraft && "border-dashed")}>
       <CardHeader>
@@ -227,22 +242,24 @@ function LessonCard({ lesson }: { lesson: LessonMeta }) {
             </CardTitle>
             {lesson.isDraft && <DraftBadge />}
           </div>
-          <div className="flex shrink-0 items-center">
-            <LessonDialog
-              lesson={{
-                guid: lesson.guid,
-                title: lesson.title,
-                slug: lesson.slug,
-                isDraft: lesson.isDraft,
-              }}
-            />
-            <DeleteDialog
-              itemLabel="lesson"
-              title={lesson.title}
-              description="All its sections and every student's progress in it are deleted too."
-              onDelete={deleteLesson.bind(null, lesson.guid)}
-            />
-          </div>
+          {editing && (
+            <div className="flex shrink-0 items-center">
+              <LessonDialog
+                lesson={{
+                  guid: lesson.guid,
+                  title: lesson.title,
+                  slug: lesson.slug,
+                  isDraft: lesson.isDraft,
+                }}
+              />
+              <DeleteDialog
+                itemLabel="lesson"
+                title={lesson.title}
+                description="All its sections and every student's progress in it are deleted too."
+                onDelete={deleteLesson.bind(null, lesson.guid)}
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
 
@@ -259,8 +276,13 @@ function LessonCard({ lesson }: { lesson: LessonMeta }) {
                 key={sublesson.guid}
                 id={sublesson.guid}
                 handleLabel="Drag to reorder section"
+                disabled={!editing}
               >
-                <SublessonRow lesson={lesson} sublesson={sublesson} />
+                <SublessonRow
+                  lesson={lesson}
+                  sublesson={sublesson}
+                  editing={editing}
+                />
               </SortableItem>
             )}
           </SortableList>
@@ -271,46 +293,77 @@ function LessonCard({ lesson }: { lesson: LessonMeta }) {
         )}
       </div>
 
-      <div className="px-6 pb-4">
-        <Link
-          href={`/lesson-editor/new?lesson=${lesson.guid}`}
-          className={buttonVariants({
-            variant: "outline",
-            size: "sm",
-            className: "gap-1.5",
-          })}
-        >
-          <Plus className="size-3.5" />
-          Add section
-        </Link>
-      </div>
+      {editing && (
+        <div className="px-6 pb-4">
+          <Link
+            href={`/lesson-editor/new?lesson=${lesson.guid}`}
+            className={buttonVariants({
+              variant: "outline",
+              size: "sm",
+              className: "gap-1.5",
+            })}
+          >
+            <Plus className="size-3.5" />
+            Add section
+          </Link>
+        </div>
+      )}
     </Card>
   );
 }
 
-/** The teacher's view of /lessons: every lesson and section, with add, edit, delete and drag-and-drop reordering. */
+/**
+ * The teacher's view of /lessons: every lesson and section. The management
+ * controls (add, edit, delete, drag-and-drop reordering) stay hidden until the
+ * Edit button in the header turns edit mode on.
+ */
 export function LessonManager({ lessons }: { lessons: LessonMeta[] }) {
-  if (lessons.length === 0) {
-    return <p className="text-sm text-muted-foreground">No lessons yet.</p>;
-  }
+  const [editing, setEditing] = useState(false);
 
   return (
-    <SortableList
-      items={lessons}
-      label="lessons"
-      save={reorderLessons}
-      className="flex flex-col gap-4"
-    >
-      {(lesson) => (
-        <SortableItem
-          key={lesson.guid}
-          id={lesson.guid}
-          handleLabel="Drag to reorder lesson"
-          className="gap-2"
+    <>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Lessons</h1>
+        <div className="flex items-center gap-2">
+          {editing && <LessonDialog />}
+          <Button
+            variant={editing ? "default" : "outline"}
+            size="sm"
+            aria-pressed={editing}
+            onClick={() => setEditing((value) => !value)}
+          >
+            {editing ? (
+              <Check className="size-3.5" />
+            ) : (
+              <Pencil className="size-3.5" />
+            )}
+            {editing ? "Done" : "Add & Edit"}
+          </Button>
+        </div>
+      </div>
+
+      {lessons.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No lessons yet.</p>
+      ) : (
+        <SortableList
+          items={lessons}
+          label="lessons"
+          save={reorderLessons}
+          className="flex flex-col gap-4"
         >
-          <LessonCard lesson={lesson} />
-        </SortableItem>
+          {(lesson) => (
+            <SortableItem
+              key={lesson.guid}
+              id={lesson.guid}
+              handleLabel="Drag to reorder lesson"
+              disabled={!editing}
+              className="gap-2"
+            >
+              <LessonCard lesson={lesson} editing={editing} />
+            </SortableItem>
+          )}
+        </SortableList>
       )}
-    </SortableList>
+    </>
   );
 }
