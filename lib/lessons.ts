@@ -1,7 +1,5 @@
 import "server-only";
 
-import fs from "node:fs";
-import path from "node:path";
 import { cache } from "react";
 
 import { sql } from "@/app/database";
@@ -9,17 +7,30 @@ import { toIsoOrNull } from "@/lib/dates";
 import type { Role } from "@/lib/types";
 import { hasTeacherAccess } from "@/lib/utils";
 
-const LESSONS_DIR = path.join(process.cwd(), "content", "lessons");
+/*
+ * Lessons and their sections (sublessons) live in content.lessons and
+ * content.sublessons, ordered by `position`. Drafts are visible to teachers
+ * only; students see published sections of published lessons they've been
+ * unlocked.
+ */
 
 export interface SublessonMeta {
+  guid: string;
   slug: string;
   title: string;
+  /** "01 - Title" for published sections, the bare title for drafts. */
+  displayTitle: string;
+  isDraft: boolean;
   completedAt: string | null;
 }
 
 export interface LessonMeta {
+  guid: string;
   slug: string;
   title: string;
+  /** "01 - Title" for published lessons, the bare title for drafts. */
+  displayTitle: string;
+  isDraft: boolean;
   sublessons: SublessonMeta[];
 }
 
@@ -44,200 +55,223 @@ export interface StudentLessonDetail extends LessonMeta {
   unlockedAt: string | null;
 }
 
-function titleFromSlug(slug: string): string {
-  const withoutOrderPrefix = slug.replace(/^\d+[-_]/, "");
-  return withoutOrderPrefix
-    .split(/[-_]/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+interface ContentRow {
+  guid: string;
+  slug: string;
+  title: string;
+  is_draft: boolean;
 }
 
-function titleFromContent(source: string, fallback: string): string {
-  const match = source.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].trim() : fallback;
+interface SublessonRow extends ContentRow {
+  lesson_guid: string;
 }
 
-/** Prefixes a title with the slug's leading order number, e.g. "01-intro" (or "01_intro") + "Intro" -> "01 - Intro". */
-function withOrderPrefix(slug: string, title: string): string {
-  const match = slug.match(/^(\d+)[-_]/);
-  return match ? `${match[1]} - ${title}` : title;
+/** Numbers published items 1, 2, 3… in order; drafts don't take a number, so students never see gaps. */
+function withDisplayTitles<T extends ContentRow>(rows: T[]): (T & { displayTitle: string })[] {
+  let number = 0;
+  return rows.map((row) => ({
+    ...row,
+    displayTitle: row.is_draft ? row.title : `${String(++number).padStart(2, "0")} - ${row.title}`,
+  }));
 }
 
-function listLessonSlugs(): string[] {
-  return fs
-    .readdirSync(LESSONS_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort();
+async function loadCatalog(includeDrafts: boolean, completion: Map<string, string | null>): Promise<LessonMeta[]> {
+  const [lessonRows, sublessonRows] = (await Promise.all([
+    sql`
+      SELECT guid, slug, title, is_draft FROM content.lessons
+      WHERE ${includeDrafts} OR NOT is_draft
+      ORDER BY position
+    `,
+    sql`
+      SELECT guid, lesson_guid, slug, title, is_draft FROM content.sublessons
+      WHERE ${includeDrafts} OR NOT is_draft
+      ORDER BY position
+    `,
+  ])) as [ContentRow[], SublessonRow[]];
+
+  return withDisplayTitles(lessonRows).map((lesson) => ({
+    guid: lesson.guid,
+    slug: lesson.slug,
+    title: lesson.title,
+    displayTitle: lesson.displayTitle,
+    isDraft: lesson.is_draft,
+    sublessons: withDisplayTitles(sublessonRows.filter((row) => row.lesson_guid === lesson.guid)).map((row) => ({
+      guid: row.guid,
+      slug: row.slug,
+      title: row.title,
+      displayTitle: row.displayTitle,
+      isDraft: row.is_draft,
+      completedAt: completion.get(row.guid) ?? null,
+    })),
+  }));
 }
 
-export function lessonExists(lessonSlug: string): boolean {
-  return listLessonSlugs().includes(lessonSlug);
+async function getUnlockedLessons(userGuid: string): Promise<Map<string, string | null>> {
+  const rows = await sql`SELECT lesson_guid, unlocked_at FROM progress.lessons WHERE user_guid = ${userGuid}`;
+  return new Map(rows.map((row) => [row.lesson_guid as string, toIsoOrNull(row.unlocked_at)]));
+}
+
+/** Completed sections of this user, by sublesson guid. */
+async function getSublessonCompletion(userGuid: string): Promise<Map<string, string | null>> {
+  const rows = await sql`SELECT sublesson_guid, completed_at FROM progress.sublessons WHERE user_guid = ${userGuid}`;
+  return new Map(rows.map((row) => [row.sublesson_guid as string, toIsoOrNull(row.completed_at)]));
 }
 
 /**
- * Sublesson files: `.mdx` (MDX, may contain `<Quiz>`) or `.md` (plain Markdown).
- * The slug is the file name without its extension.
+ * Lessons visible to this user: all of them (drafts included) for teachers,
+ * only published, unlocked ones otherwise. Cached per request; pass the
+ * object from `getCurrentUser()` so callers share the cache entry.
  */
-const SUBLESSON_EXTENSIONS = [".mdx", ".md"] as const;
-export type SublessonFormat = "mdx" | "md";
-
-function sublessonFiles(lessonSlug: string): Map<string, string> {
-  const files = new Map<string, string>();
-  for (const file of fs.readdirSync(path.join(LESSONS_DIR, lessonSlug))) {
-    const ext = SUBLESSON_EXTENSIONS.find((e) => file.endsWith(e));
-    if (!ext) {
-      continue;
-    }
-    const slug = file.slice(0, -ext.length);
-    // If both 01-intro.md and 01-intro.mdx exist, the .mdx one wins.
-    if (!files.has(slug) || ext === ".mdx") {
-      files.set(slug, file);
-    }
+export const getLessons = cache(async (user: AccessUser): Promise<LessonMeta[]> => {
+  if (hasTeacherAccess(user.role)) {
+    return loadCatalog(true, await getSublessonCompletion(user.guid));
   }
-  return files;
+
+  const [unlocked, completion] = await Promise.all([
+    getUnlockedLessons(user.guid),
+    getSublessonCompletion(user.guid),
+  ]);
+  const lessons = await loadCatalog(false, completion);
+  return lessons.filter((lesson) => unlocked.has(lesson.guid));
+});
+
+/** A single lesson, or null if it doesn't exist or this user can't access it. */
+export async function getLesson(user: AccessUser, lessonSlug: string): Promise<LessonMeta | null> {
+  const lessons = await getLessons(user);
+  return lessons.find((lesson) => lesson.slug === lessonSlug) ?? null;
 }
 
-function listSublessonSlugs(lessonSlug: string): string[] {
-  return [...sublessonFiles(lessonSlug).keys()].sort();
+/** A section's MDX source. Check access first (e.g. via `getLesson`). */
+export async function getSublessonBody(sublessonGuid: string): Promise<string | null> {
+  const [row] = await sql`SELECT body FROM content.sublessons WHERE guid = ${sublessonGuid}`;
+  return row ? (row.body as string) : null;
 }
 
-export function getSublessonFile(
-  lessonSlug: string,
-  sublessonSlug: string,
-): { source: string; format: SublessonFormat } {
-  const file = sublessonFiles(lessonSlug).get(sublessonSlug);
-  if (!file) {
-    throw new Error(`Sublesson not found: ${lessonSlug}/${sublessonSlug}`);
+export interface AccessibleSublesson {
+  guid: string;
+  slug: string;
+  body: string;
+  lessonSlug: string;
+}
+
+/** A section with its source, or null if it doesn't exist or this user can't access it. For server actions. */
+export async function getAccessibleSublesson(
+  user: AccessUser,
+  sublessonGuid: string,
+): Promise<AccessibleSublesson | null> {
+  const isTeacher = hasTeacherAccess(user.role);
+  const [row] = await sql`
+    SELECT s.guid, s.slug, s.body, l.slug AS lesson_slug
+    FROM content.sublessons s
+    JOIN content.lessons l ON l.guid = s.lesson_guid
+    WHERE s.guid = ${sublessonGuid}
+      AND (
+        ${isTeacher}
+        OR (
+          NOT s.is_draft AND NOT l.is_draft
+          AND EXISTS (SELECT 1 FROM progress.lessons p WHERE p.user_guid = ${user.guid} AND p.lesson_guid = l.guid)
+        )
+      )
+  `;
+  if (!row) {
+    return null;
   }
   return {
-    source: fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, file), "utf8"),
-    format: file.endsWith(".mdx") ? "mdx" : "md",
+    guid: row.guid as string,
+    slug: row.slug as string,
+    body: row.body as string,
+    lessonSlug: row.lesson_slug as string,
   };
 }
 
-/** The ids of every `<Quiz id="...">` block in a sublesson. Plain `.md` files can't contain quizzes. */
-export function extractQuizIds(source: string, format: SublessonFormat): string[] {
-  if (format !== "mdx") {
-    return [];
-  }
-  return [...source.matchAll(/<Quiz\s+id="([^"]+)"/g)].map((match) => match[1]);
-}
-
-export function getQuizIds(lessonSlug: string, sublessonSlug: string): string[] {
-  const { source, format } = getSublessonFile(lessonSlug, sublessonSlug);
-  return extractQuizIds(source, format);
-}
-
-/** This user's saved responses for every interactive block in a sublesson, keyed by interaction id. */
+/** This user's saved responses for every interactive block in a section, keyed by interaction id. */
 export async function getInteractions(
   userGuid: string,
-  lessonSlug: string,
-  sublessonSlug: string,
+  sublessonGuid: string,
 ): Promise<Record<string, { type: string; response: unknown }>> {
   const rows = await sql`
     SELECT interaction_id, type, response
     FROM progress.interactions
-    WHERE user_guid = ${userGuid} AND lesson_slug = ${lessonSlug} AND sublesson_slug = ${sublessonSlug}
+    WHERE user_guid = ${userGuid} AND sublesson_guid = ${sublessonGuid}
   `;
   return Object.fromEntries(
     rows.map((row) => [row.interaction_id as string, { type: row.type as string, response: row.response }]),
   );
 }
 
-async function getUnlockedLessonSlugs(userGuid: string): Promise<Set<string>> {
-  const rows = await sql`
-    SELECT lesson_slug FROM progress.lessons WHERE user_guid = ${userGuid}
-  `;
-  return new Set(rows.map((row) => row.lesson_slug as string));
+// --- Editing (teachers) ---
+
+export interface LessonSummary {
+  guid: string;
+  slug: string;
+  title: string;
 }
 
-async function getSublessonCompletion(userGuid: string): Promise<Map<string, string | null>> {
-  const rows = await sql`
-    SELECT lesson_slug, sublesson_slug, completed_at
-    FROM progress.sublessons
-    WHERE user_guid = ${userGuid}
-  `;
-  return new Map(
-    rows.map((row) => [`${row.lesson_slug}/${row.sublesson_slug}`, toIsoOrNull(row.completed_at)]),
-  );
+export async function getLessonSummary(lessonGuid: string): Promise<LessonSummary | null> {
+  const [row] = await sql`SELECT guid, slug, title FROM content.lessons WHERE guid = ${lessonGuid}`;
+  return row ? { guid: row.guid as string, slug: row.slug as string, title: row.title as string } : null;
 }
 
-function buildLessonMeta(
-  lessonSlug: string,
-  completion: Map<string, string | null>,
-): LessonMeta {
+export interface EditableSublesson {
+  guid: string;
+  lesson: LessonSummary;
+  slug: string;
+  title: string;
+  body: string;
+  isDraft: boolean;
+}
+
+export async function getEditableSublesson(sublessonGuid: string): Promise<EditableSublesson | null> {
+  const [row] = await sql`
+    SELECT s.guid, s.slug, s.title, s.body, s.is_draft,
+           l.guid AS lesson_guid, l.slug AS lesson_slug, l.title AS lesson_title
+    FROM content.sublessons s
+    JOIN content.lessons l ON l.guid = s.lesson_guid
+    WHERE s.guid = ${sublessonGuid}
+  `;
+  if (!row) {
+    return null;
+  }
   return {
-    slug: lessonSlug,
-    title: withOrderPrefix(lessonSlug, titleFromSlug(lessonSlug)),
-    sublessons: listSublessonSlugs(lessonSlug).map((sublessonSlug) => {
-      const { source } = getSublessonFile(lessonSlug, sublessonSlug);
-      return {
-        slug: sublessonSlug,
-        title: withOrderPrefix(sublessonSlug, titleFromContent(source, titleFromSlug(sublessonSlug))),
-        completedAt: completion.get(`${lessonSlug}/${sublessonSlug}`) ?? null,
-      };
-    }),
+    guid: row.guid as string,
+    lesson: { guid: row.lesson_guid as string, slug: row.lesson_slug as string, title: row.lesson_title as string },
+    slug: row.slug as string,
+    title: row.title as string,
+    body: row.body as string,
+    isDraft: row.is_draft as boolean,
   };
 }
 
-/** Lessons visible to this user: all of them for an admin, only unlocked ones otherwise. */
-export async function getLessons(user: AccessUser): Promise<LessonMeta[]> {
-  const allSlugs = listLessonSlugs();
-  const isAdmin = hasTeacherAccess(user.role);
+// --- Students (teacher views) ---
 
-  const [unlockedSlugs, completion] = await Promise.all([
-    isAdmin ? Promise.resolve(new Set(allSlugs)) : getUnlockedLessonSlugs(user.guid),
-    getSublessonCompletion(user.guid),
-  ]);
-
-  const visibleSlugs = isAdmin ? allSlugs : allSlugs.filter((slug) => unlockedSlugs.has(slug));
-
-  return visibleSlugs.map((lessonSlug) => buildLessonMeta(lessonSlug, completion));
-}
-
-/**
- * A single lesson, or null if it doesn't exist or this user can't access it.
- * Wrapped in `cache()` so the lesson layout and its page/content route
- * (which both need this for the same request) don't each hit fs + DB.
- */
-export const getLesson = cache(async (user: AccessUser, lessonSlug: string): Promise<LessonMeta | null> => {
-  if (!lessonExists(lessonSlug)) {
-    return null;
-  }
-
-  if (!hasTeacherAccess(user.role)) {
-    const unlockedSlugs = await getUnlockedLessonSlugs(user.guid);
-    if (!unlockedSlugs.has(lessonSlug)) {
-      return null;
-    }
-  }
-
-  const completion = await getSublessonCompletion(user.guid);
-  return buildLessonMeta(lessonSlug, completion);
-});
-
-function getTotalSublessonCount(): number {
-  return listLessonSlugs().reduce((sum, slug) => sum + listSublessonSlugs(slug).length, 0);
-}
-
-/** All students (role "User"), with unlocked-lesson and completed-sublesson counts. For admin use. */
+/** All students (role "User"), with unlocked-lesson and completed-section counts over published content. */
 export async function getStudents(): Promise<StudentSummary[]> {
-  const [users, unlockedRows, completedRows] = await Promise.all([
+  const [users, unlockedRows, completedRows, [totals]] = await Promise.all([
     sql`SELECT guid, first_name, last_name, email FROM users WHERE role = 'User' ORDER BY first_name, last_name`,
-    sql`SELECT user_guid, COUNT(*)::int AS count FROM progress.lessons GROUP BY user_guid`,
     sql`
-      SELECT user_guid, COUNT(*)::int AS count FROM progress.sublessons
-      WHERE completed_at IS NOT NULL
-      GROUP BY user_guid
+      SELECT p.user_guid, COUNT(*)::int AS count
+      FROM progress.lessons p
+      JOIN content.lessons l ON l.guid = p.lesson_guid AND NOT l.is_draft
+      GROUP BY p.user_guid
+    `,
+    sql`
+      SELECT p.user_guid, COUNT(*)::int AS count
+      FROM progress.sublessons p
+      JOIN content.sublessons s ON s.guid = p.sublesson_guid AND NOT s.is_draft
+      JOIN content.lessons l ON l.guid = s.lesson_guid AND NOT l.is_draft
+      GROUP BY p.user_guid
+    `,
+    sql`
+      SELECT
+        (SELECT COUNT(*)::int FROM content.lessons WHERE NOT is_draft) AS lessons,
+        (SELECT COUNT(*)::int FROM content.sublessons s
+           JOIN content.lessons l ON l.guid = s.lesson_guid
+           WHERE NOT s.is_draft AND NOT l.is_draft) AS sublessons
     `,
   ]);
 
   const unlockedByUser = new Map(unlockedRows.map((row) => [row.user_guid as string, row.count as number]));
   const completedByUser = new Map(completedRows.map((row) => [row.user_guid as string, row.count as number]));
-
-  const totalLessonCount = listLessonSlugs().length;
-  const totalSublessonCount = getTotalSublessonCount();
 
   return (users as { guid: string; first_name: string; last_name: string; email: string }[]).map((student) => ({
     guid: student.guid,
@@ -245,13 +279,13 @@ export async function getStudents(): Promise<StudentSummary[]> {
     lastName: student.last_name,
     email: student.email,
     unlockedLessonCount: unlockedByUser.get(student.guid) ?? 0,
-    totalLessonCount,
+    totalLessonCount: totals.lessons as number,
     completedSublessonCount: completedByUser.get(student.guid) ?? 0,
-    totalSublessonCount,
+    totalSublessonCount: totals.sublessons as number,
   }));
 }
 
-/** One student's full lesson breakdown (locked and unlocked), for the admin detail page. */
+/** One student's breakdown of every published lesson (locked and unlocked), for the student detail page. */
 export async function getStudentDetail(studentGuid: string): Promise<{
   student: { guid: string; firstName: string; lastName: string; email: string; status: "Active" | "Inactive" };
   lessons: StudentLessonDetail[];
@@ -263,18 +297,14 @@ export async function getStudentDetail(studentGuid: string): Promise<{
     return null;
   }
 
-  const [unlockedRows, completion] = await Promise.all([
-    sql`SELECT lesson_slug, unlocked_at FROM progress.lessons WHERE user_guid = ${studentGuid}`,
+  const [unlocked, completion] = await Promise.all([
+    getUnlockedLessons(studentGuid),
     getSublessonCompletion(studentGuid),
   ]);
-  const unlockedByLesson = new Map(
-    unlockedRows.map((row) => [row.lesson_slug as string, toIsoOrNull(row.unlocked_at)]),
-  );
-
-  const lessons = listLessonSlugs().map((lessonSlug) => ({
-    ...buildLessonMeta(lessonSlug, completion),
-    unlocked: unlockedByLesson.has(lessonSlug),
-    unlockedAt: unlockedByLesson.get(lessonSlug) ?? null,
+  const lessons = (await loadCatalog(false, completion)).map((lesson) => ({
+    ...lesson,
+    unlocked: unlocked.has(lesson.guid),
+    unlockedAt: unlocked.get(lesson.guid) ?? null,
   }));
 
   const row = student as { guid: string; first_name: string; last_name: string; email: string; status: "Active" | "Inactive" };

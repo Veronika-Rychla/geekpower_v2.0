@@ -59,7 +59,8 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
               ) : (
                 <Circle className="size-3.5 shrink-0" />
               ))}
-            <span className="truncate">{sublesson.title}</span>
+            <span className={cn("truncate", sublesson.isDraft && "italic")}>{sublesson.displayTitle}</span>
+            {sublesson.isDraft && <span className="ml-auto shrink-0 text-xs text-muted-foreground">Draft</span>}
           </Link>
         );
       })}
@@ -85,7 +86,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
           className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium"
           aria-expanded={open}
         >
-          <span className="truncate">{activeSublesson?.title ?? "Sections"}</span>
+          <span className="truncate">{activeSublesson?.displayTitle ?? "Sections"}</span>
           <ChevronDown className={cn("size-4 shrink-0 transition-transform", open && "rotate-180")} />
         </button>
 

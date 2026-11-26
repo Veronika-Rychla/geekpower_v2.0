@@ -1,17 +1,30 @@
 import Link from "next/link";
 
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/lib/guards";
 import { hasTeacherAccess } from "@/lib/utils";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LessonDialog } from "@/components/lessons/manage/lesson-dialog";
+import { LessonManager } from "@/components/lessons/manage/lesson-manager";
 import { getLessons } from "@/lib/lessons";
 
 export default async function LessonsPage() {
-  const session = await auth();
-  if (!session?.user?.guid || !session.user.role) {
+  const user = await getCurrentUser();
+  if (!user) {
     return null;
   }
-  const lessons = await getLessons({ guid: session.user.guid, role: session.user.role });
-  const isAdmin = hasTeacherAccess(session.user.role);
+  const lessons = await getLessons(user);
+
+  if (hasTeacherAccess(user.role)) {
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold">Lessons</h1>
+          <LessonDialog />
+        </div>
+        <LessonManager lessons={lessons} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
@@ -21,15 +34,13 @@ export default async function LessonsPage() {
           const completedCount = lesson.sublessons.filter((s) => s.completedAt).length;
 
           return (
-            <Link key={lesson.slug} href={`/lessons/${lesson.slug}`}>
+            <Link key={lesson.guid} href={`/lessons/${lesson.slug}`}>
               <Card className="transition-colors hover:bg-muted">
                 <CardHeader>
-                  <CardTitle>{lesson.title}</CardTitle>
-                  {!isAdmin && (
-                    <CardDescription>
-                      {completedCount} / {lesson.sublessons.length} completed
-                    </CardDescription>
-                  )}
+                  <CardTitle>{lesson.displayTitle}</CardTitle>
+                  <CardDescription>
+                    {completedCount} / {lesson.sublessons.length} completed
+                  </CardDescription>
                 </CardHeader>
               </Card>
             </Link>

@@ -1,0 +1,93 @@
+/*
+ * The robot's colours and animations. Palette and the calm/wild animations
+ * come from the public website (geekpower_website/components/mascot/); the
+ * loading and error ones were added here.
+ */
+
+.mascot {
+  --mascot-text: #e9e9ed;
+  --mascot-accent: #9184d9;
+  --mascot-200: #e7e5fe;
+  --mascot-300: #d2cefd;
+  --mascot-500: #968ae0;
+  --mascot-600: #796cbf;
+  --mascot-800: #423a6a;
+  --mascot-900: #2b2741;
+}
+
+/* Calm robot: hovers, head floats a beat behind the body, blinks, antenna light pulses. */
+@keyframes mascot-hover { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(-2deg); } }
+@keyframes mascot-head-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-1.5px) rotate(1.5deg); } }
+@keyframes mascot-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.5; } 50% { transform: scaleX(0.7); opacity: 0.25; } }
+@keyframes mascot-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes mascot-light { 0%, 100% { fill: var(--mascot-500); } 50% { fill: var(--mascot-200); } }
+@keyframes mascot-planet {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  50% { transform: translate(-2px, 3px) rotate(8deg); }
+}
+/* Wild robot: the broken antenna throws sparks. */
+@keyframes mascot-spark { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes mascot-shake {
+  0% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(-2px, 1px) rotate(-4deg); }
+  50% { transform: translate(2px, -1px) rotate(3deg); }
+  75% { transform: translate(-1px, -2px) rotate(-2deg); }
+  100% { transform: translate(1px, 2px) rotate(4deg); }
+}
+
+/* Loading: dots on the chest screen, eyes reading left-right. */
+@keyframes mascot-dot { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-1.5px); } }
+@keyframes mascot-read {
+  0%, 15% { transform: translateX(-2.5px); }
+  45%, 55% { transform: translateX(2.5px); }
+  85%, 100% { transform: translateX(-2.5px); }
+}
+@keyframes mascot-sweat { 0% { transform: translateY(0); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+
+/*
+ * The loader's routine on the wrapper around the art: hover for a while, then
+ * crouch, backflip and land with a squash. Feels like it's showing off while
+ * you wait.
+ */
+@keyframes robot-loader-routine {
+  0%, 62% { transform: translateY(0) rotate(0) scale(1, 1); animation-timing-function: ease-in-out; }
+  68% { transform: translateY(0) rotate(0) scale(1.15, 0.82); animation-timing-function: ease-out; }
+  80% { transform: translateY(-48px) rotate(-200deg) scale(0.95, 1.05); animation-timing-function: ease-in; }
+  90% { transform: translateY(0) rotate(-360deg) scale(1.18, 0.82); animation-timing-function: ease-out; }
+  95% { transform: translateY(-6px) rotate(-360deg) scale(0.96, 1.05); }
+  100% { transform: translateY(0) rotate(-360deg) scale(1, 1); }
+}
+/* A "byte" the robot keeps tossing up. */
+@keyframes robot-loader-byte {
+  0% { transform: translate(0, 0) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(18px, -46px) rotate(200deg); }
+  90% { opacity: 1; }
+  100% { transform: translate(36px, 0) rotate(400deg); opacity: 0; }
+}
+@keyframes robot-loader-enter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes robot-message-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mascot-animated .mascot-body { animation: mascot-hover 3.2s ease-in-out infinite; transform-origin: 52px 72px; }
+  .mascot-animated .mascot-head { animation: mascot-head-float 3.2s ease-in-out -0.6s infinite; transform-origin: 55px 72px; }
+  .mascot-animated .mascot-shadow { animation: mascot-shadow 3.2s ease-in-out infinite; transform-origin: 50px 117px; }
+  .mascot-animated .mascot-eye { animation: mascot-blink 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+  .mascot-animated .mascot-light { animation: mascot-light 1.8s ease-in-out infinite; }
+  .mascot-animated .mascot-planet { animation: mascot-planet 5s ease-in-out infinite; transform-origin: 101px 24px; }
+  .mascot-reading .mascot-pupils { animation: mascot-read 2.4s ease-in-out infinite; }
+  .mascot-loading-dots circle { animation: mascot-dot 1.2s ease-in-out infinite; transform-box: fill-box; }
+  .mascot-loading-dots circle:nth-child(2) { animation-delay: 0.2s; }
+  .mascot-loading-dots circle:nth-child(3) { animation-delay: 0.4s; }
+  .mascot-spark { animation: mascot-spark 0.3s steps(1) infinite; }
+  .mascot-sweat { animation: mascot-sweat 1.6s ease-in infinite; }
+
+  .mascot-mood-shake { animation: mascot-shake 0.09s linear infinite; }
+  .robot-loader-routine { animation: robot-loader-routine 6s infinite; transform-origin: 50% 85%; }
+  .robot-loader-byte { animation: robot-loader-byte 1.6s ease-in-out infinite; }
+  .robot-message { animation: robot-message-in 0.3s ease-out; }
+  .robot-loader-enter { animation: robot-loader-enter 0.25s ease-out; }
+}
+
+.mascot-glow { filter: drop-shadow(0 0 18px color-mix(in srgb, var(--mascot-accent) 35%, transparent)); }
+.mascot-glow-strong { filter: drop-shadow(0 0 18px color-mix(in srgb, var(--mascot-accent) 45%, transparent)); }

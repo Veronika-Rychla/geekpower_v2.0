@@ -6,24 +6,52 @@ import { randomUUID, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
-import { auth } from "@/auth";
 import { sql } from "@/app/database";
-import { requireAdmin, requireTeacher } from "@/lib/guards";
+import { requireAdmin, requireTeacher, requireUser, type CurrentUser } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
-import { getInteractions, getLessons, getQuizIds, lessonExists } from "@/lib/lessons";
+import { getAccessibleSublesson, getInteractions, getLessons } from "@/lib/lessons";
+import { compileLessonSource, getLessonQuizzes } from "@/lib/mdx/lesson-mdx";
+import { gradeQuiz, isResponseCorrect } from "@/lib/quizzes";
+import { SLUG_MAX_LENGTH, SLUG_PATTERN } from "@/lib/slug";
 import { ANNOUNCEMENT_TYPES, BLOG_POST_TYPES, type AnnouncementType, type BlogPostType } from "@/lib/types";
 import { BLOG_POSTS_CACHE_TAG } from "@/lib/blog";
-import { signBlogImageUpload, type SignedImageUpload } from "@/lib/cloudinary";
+import { IMAGE_FOLDERS, signImageUpload, type ImageFolder, type SignedImageUpload } from "@/lib/cloudinary";
 import { estimateReadTime } from "@/components/blog/markdown/read-time";
 
 const RESET_TOKEN_TTL_HOURS = 24;
 const PASSWORD_MIN_LENGTH = 8;
 const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200;
+const CONTENT_TITLE_MAX_LENGTH = 200;
+const SUBLESSON_BODY_MAX_LENGTH = 200_000;
 
 // Action arguments come straight from the client, so TypeScript types alone guarantee nothing.
 const guidSchema = z.string().min(1).max(64);
-const slugSchema = z.string().regex(/^[\w-]{1,100}$/, "Invalid slug");
+const lessonSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required.")
+    .max(CONTENT_TITLE_MAX_LENGTH, `Title must be at most ${CONTENT_TITLE_MAX_LENGTH} characters.`),
+  slug: z
+    .string()
+    .trim()
+    .min(1, "Slug is required.")
+    .max(SLUG_MAX_LENGTH, `Slug must be at most ${SLUG_MAX_LENGTH} characters.`)
+    .regex(SLUG_PATTERN, "Slug may contain only lowercase letters, digits and single dashes."),
+  isDraft: z.boolean(),
+});
+const sublessonSchema = lessonSchema.extend({
+  body: z
+    .string()
+    .trim()
+    .min(1, "Content is required.")
+    .max(SUBLESSON_BODY_MAX_LENGTH, `Content must be at most ${SUBLESSON_BODY_MAX_LENGTH} characters.`),
+});
+
+type LessonInput = { title: string; slug: string; isDraft: boolean };
+type SublessonInput = LessonInput & { body: string };
+
 const userSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required.").max(100),
   lastName: z.string().trim().min(1, "Last name is required.").max(100),
@@ -84,108 +112,265 @@ async function createPasswordResetToken(userGuid: string): Promise<string> {
   return token;
 }
 
-export async function completeSublesson(lessonSlug: string, sublessonSlug: string) {
-  const session = await auth();
-  const userGuid = session?.user?.guid;
+// --- Lessons: student progress ---
 
-  if (!userGuid) {
-    throw new Error("Not authenticated");
+export async function completeSublesson(sublessonGuidInput: string) {
+  const user = await requireUser();
+  const sublessonGuid = parseOrThrow(guidSchema, sublessonGuidInput);
+
+  const sublesson = await getAccessibleSublesson(user, sublessonGuid);
+  if (!sublesson) {
+    throw new Error("Not found");
   }
 
-  const quizIds = getQuizIds(lessonSlug, sublessonSlug);
-  if (quizIds.length > 0) {
-    const interactions = await getInteractions(userGuid, lessonSlug, sublessonSlug);
-    const allQuizzesCorrect = quizIds.every((quizId) => {
-      const response = interactions[quizId]?.response as { correct?: boolean } | undefined;
-      return response?.correct === true;
-    });
-    if (!allQuizzesCorrect) {
+  const quizzes = await getLessonQuizzes(sublesson.body);
+  if (quizzes.length > 0) {
+    const interactions = await getInteractions(user.guid, sublesson.guid);
+    if (!quizzes.every((quiz) => isResponseCorrect(interactions[quiz.id]?.response))) {
       throw new Error("Answer all quizzes correctly before finishing this section");
     }
   }
 
   await sql`
-    INSERT INTO progress.sublessons (user_guid, lesson_slug, sublesson_slug, completed_at)
-    VALUES (${userGuid}, ${lessonSlug}, ${sublessonSlug}, now())
-    ON CONFLICT (user_guid, lesson_slug, sublesson_slug)
+    INSERT INTO progress.sublessons (user_guid, sublesson_guid, completed_at)
+    VALUES (${user.guid}, ${sublesson.guid}, now())
+    ON CONFLICT (user_guid, sublesson_guid)
     DO UPDATE SET completed_at = now()
   `;
 
-  revalidatePath(`/lessons/${lessonSlug}`, "layout");
+  revalidatePath(`/lessons/${sublesson.lessonSlug}`, "layout");
 
-  // Move on to the next sublesson, or to the next unlocked lesson after the last one.
-  const role = session?.user?.role;
-  const nextHref = role
-    ? await getNextSublessonHref({ guid: userGuid, role }, lessonSlug, sublessonSlug)
-    : null;
+  // Move on to the next section, or to the next lesson after the last one.
+  const nextHref = await getNextSublessonHref(user, sublesson.guid);
   if (nextHref) {
     redirect(nextHref);
   }
 }
 
-async function getNextSublessonHref(
-  user: Parameters<typeof getLessons>[0],
-  lessonSlug: string,
-  sublessonSlug: string,
-): Promise<string | null> {
+async function getNextSublessonHref(user: CurrentUser, sublessonGuid: string): Promise<string | null> {
   const lessons = await getLessons(user);
-  const lessonIndex = lessons.findIndex((l) => l.slug === lessonSlug);
+  const lessonIndex = lessons.findIndex((l) => l.sublessons.some((s) => s.guid === sublessonGuid));
   if (lessonIndex === -1) {
     return null;
   }
 
-  const sublessons = lessons[lessonIndex].sublessons;
-  const next = sublessons[sublessons.findIndex((s) => s.slug === sublessonSlug) + 1];
+  const { slug, sublessons } = lessons[lessonIndex];
+  const next = sublessons[sublessons.findIndex((s) => s.guid === sublessonGuid) + 1];
   if (next) {
-    return `/lessons/${lessonSlug}/${next.slug}`;
+    return `/lessons/${slug}/${next.slug}`;
   }
 
-  // The lesson index route resumes at the first unfinished sublesson.
+  // The lesson index route resumes at the first unfinished section.
   const nextLesson = lessons.slice(lessonIndex + 1).find((l) => l.sublessons.length > 0);
   return nextLesson ? `/lessons/${nextLesson.slug}` : null;
 }
 
-export async function saveInteraction(
-  lessonSlug: string,
-  sublessonSlug: string,
-  interactionId: string,
-  type: string,
-  response: unknown,
-) {
-  const session = await auth();
-  const userGuid = session?.user?.guid;
+/** Grades a quiz answer on the server (the correct answer never reaches the browser) and saves it. */
+export async function answerQuiz(
+  sublessonGuidInput: string,
+  quizIdInput: string,
+  answer: unknown,
+): Promise<{ correct: boolean }> {
+  const user = await requireUser();
+  const sublessonGuid = parseOrThrow(guidSchema, sublessonGuidInput);
+  const quizId = parseOrThrow(z.string().max(64), quizIdInput);
 
-  if (!userGuid) {
-    throw new Error("Not authenticated");
+  const sublesson = await getAccessibleSublesson(user, sublessonGuid);
+  const quiz = sublesson && (await getLessonQuizzes(sublesson.body)).find((q) => q.id === quizId);
+  if (!sublesson || !quiz) {
+    throw new Error("Not found");
+  }
+
+  const graded = gradeQuiz(quiz, answer);
+  if (!graded) {
+    throw new Error("Invalid input");
   }
 
   await sql`
-    INSERT INTO progress.interactions (user_guid, lesson_slug, sublesson_slug, interaction_id, type, response, completed_at)
-    VALUES (${userGuid}, ${lessonSlug}, ${sublessonSlug}, ${interactionId}, ${type}, ${JSON.stringify(response)}::jsonb, now())
-    ON CONFLICT (user_guid, lesson_slug, sublesson_slug, interaction_id)
+    INSERT INTO progress.interactions (user_guid, sublesson_guid, interaction_id, type, response, completed_at)
+    VALUES (${user.guid}, ${sublesson.guid}, ${quiz.id}, ${quiz.kind}, ${JSON.stringify(graded.response)}::jsonb, now())
+    ON CONFLICT (user_guid, sublesson_guid, interaction_id)
     DO UPDATE SET response = EXCLUDED.response, type = EXCLUDED.type, completed_at = now()
   `;
 
-  revalidatePath(`/lessons/${lessonSlug}/${sublessonSlug}`);
+  revalidatePath(`/lessons/${sublesson.lessonSlug}/${sublesson.slug}`);
+  return { correct: graded.correct };
 }
 
-export async function unlockLesson(studentGuidInput: string, lessonSlugInput: string) {
+export async function unlockLesson(studentGuidInput: string, lessonGuidInput: string) {
   const teacher = await requireTeacher();
   const studentGuid = parseOrThrow(guidSchema, studentGuidInput);
-  const lessonSlug = parseOrThrow(slugSchema, lessonSlugInput);
+  const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
 
   const [student] = await sql`SELECT 1 FROM users WHERE guid = ${studentGuid} AND role = 'User'`;
-  if (!student || !lessonExists(lessonSlug)) {
+  const [lesson] = await sql`SELECT 1 FROM content.lessons WHERE guid = ${lessonGuid}`;
+  if (!student || !lesson) {
     throw new Error("Not found");
   }
 
   await sql`
-    INSERT INTO progress.lessons (user_guid, lesson_slug, unlocked_by, unlocked_at)
-    VALUES (${studentGuid}, ${lessonSlug}, ${teacher.guid}, now())
-    ON CONFLICT (user_guid, lesson_slug) DO NOTHING
+    INSERT INTO progress.lessons (user_guid, lesson_guid, unlocked_by, unlocked_at)
+    VALUES (${studentGuid}, ${lessonGuid}, ${teacher.guid}, now())
+    ON CONFLICT (user_guid, lesson_guid) DO NOTHING
   `;
 
   revalidatePath(`/students/${studentGuid}`);
+}
+
+// --- Lessons: content editing (teachers) ---
+
+type ContentResult = { error: string } | { success: true; href: string };
+
+/** Lesson pages, the lesson list and the student pages all show lesson content. */
+function revalidateLessonContent() {
+  revalidatePath("/lessons", "layout");
+  revalidatePath("/students", "layout");
+}
+
+/** Postgres unique_violation, raised here by a slug that's already taken. */
+function isUniqueViolation(error: unknown): boolean {
+  return (error as { code?: string } | null)?.code === "23505";
+}
+
+export async function createLesson(input: LessonInput): Promise<ContentResult> {
+  await requireTeacher();
+  const parsed = parseForForm(lessonSchema, input);
+  if ("error" in parsed) return parsed;
+  const { title, slug, isDraft } = parsed.data;
+
+  try {
+    await sql`
+      INSERT INTO content.lessons (slug, title, is_draft, position)
+      VALUES (${slug}, ${title}, ${isDraft}, (SELECT COALESCE(MAX(position), 0) + 1 FROM content.lessons))
+    `;
+  } catch (error) {
+    if (isUniqueViolation(error)) return { error: "Another lesson already uses this slug." };
+    throw error;
+  }
+
+  revalidateLessonContent();
+  return { success: true, href: "/lessons" };
+}
+
+export async function updateLesson(guidInput: string, input: LessonInput): Promise<ContentResult> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+  const parsed = parseForForm(lessonSchema, input);
+  if ("error" in parsed) return parsed;
+  const { title, slug, isDraft } = parsed.data;
+
+  try {
+    const updated = await sql`
+      UPDATE content.lessons
+      SET slug = ${slug}, title = ${title}, is_draft = ${isDraft}, updated_at = now()
+      WHERE guid = ${guid}
+      RETURNING guid
+    `;
+    if (updated.length === 0) throw new Error("Not found");
+  } catch (error) {
+    if (isUniqueViolation(error)) return { error: "Another lesson already uses this slug." };
+    throw error;
+  }
+
+  revalidateLessonContent();
+  return { success: true, href: "/lessons" };
+}
+
+/** Deletes the lesson with its sections and every student's progress in it (FK cascades). */
+export async function deleteLesson(guidInput: string): Promise<{ success: true }> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+
+  await sql`DELETE FROM content.lessons WHERE guid = ${guid}`;
+
+  revalidateLessonContent();
+  return { success: true };
+}
+
+/** Compiles a section for the editor's live preview, or returns the compile error to show instead. */
+export async function previewSublesson(sourceInput: string): Promise<{ compiledSource: string } | { error: string }> {
+  await requireTeacher();
+  const source = parseOrThrow(z.string().max(SUBLESSON_BODY_MAX_LENGTH), sourceInput);
+
+  const result = await compileLessonSource(source);
+  return "error" in result ? result : { compiledSource: result.compiledSource };
+}
+
+/** Like `parseForForm`, then also requires the body to compile. */
+async function parseSublessonInput(input: unknown): Promise<{ error: string } | { data: z.infer<typeof sublessonSchema> }> {
+  const parsed = parseForForm(sublessonSchema, input);
+  if ("error" in parsed) return parsed;
+  const compiled = await compileLessonSource(parsed.data.body);
+  if ("error" in compiled) {
+    return { error: `The content has an error, so it can't be saved:\n${compiled.error}` };
+  }
+  return parsed;
+}
+
+export async function createSublesson(lessonGuidInput: string, input: SublessonInput): Promise<ContentResult> {
+  await requireTeacher();
+  const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
+  const parsed = await parseSublessonInput(input);
+  if ("error" in parsed) return parsed;
+  const { title, slug, isDraft, body } = parsed.data;
+
+  let lessonSlug: string;
+  try {
+    const [row] = await sql`
+      INSERT INTO content.sublessons (lesson_guid, slug, title, body, is_draft, position)
+      SELECT l.guid, ${slug}, ${title}, ${body}, ${isDraft},
+             (SELECT COALESCE(MAX(position), 0) + 1 FROM content.sublessons WHERE lesson_guid = l.guid)
+      FROM content.lessons l
+      WHERE l.guid = ${lessonGuid}
+      RETURNING (SELECT slug FROM content.lessons WHERE guid = ${lessonGuid}) AS lesson_slug
+    `;
+    if (!row) throw new Error("Not found");
+    lessonSlug = row.lesson_slug as string;
+  } catch (error) {
+    if (isUniqueViolation(error)) return { error: "Another section of this lesson already uses this slug." };
+    throw error;
+  }
+
+  revalidateLessonContent();
+  return { success: true, href: `/lessons/${lessonSlug}/${slug}` };
+}
+
+export async function updateSublesson(guidInput: string, input: SublessonInput): Promise<ContentResult> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+  const parsed = await parseSublessonInput(input);
+  if ("error" in parsed) return parsed;
+  const { title, slug, isDraft, body } = parsed.data;
+
+  let lessonSlug: string;
+  try {
+    const [row] = await sql`
+      UPDATE content.sublessons s
+      SET slug = ${slug}, title = ${title}, body = ${body}, is_draft = ${isDraft}, updated_at = now()
+      FROM content.lessons l
+      WHERE s.guid = ${guid} AND l.guid = s.lesson_guid
+      RETURNING l.slug AS lesson_slug
+    `;
+    if (!row) throw new Error("Not found");
+    lessonSlug = row.lesson_slug as string;
+  } catch (error) {
+    if (isUniqueViolation(error)) return { error: "Another section of this lesson already uses this slug." };
+    throw error;
+  }
+
+  revalidateLessonContent();
+  return { success: true, href: `/lessons/${lessonSlug}/${slug}` };
+}
+
+/** Deletes the section and every student's progress in it (FK cascades). */
+export async function deleteSublesson(guidInput: string): Promise<{ success: true }> {
+  await requireTeacher();
+  const guid = parseOrThrow(guidSchema, guidInput);
+
+  await sql`DELETE FROM content.sublessons WHERE guid = ${guid}`;
+
+  revalidateLessonContent();
+  return { success: true };
 }
 
 export async function createStudent(input: {
@@ -390,10 +575,11 @@ export async function updateBlogPost(
   return { success: true, guid };
 }
 
-/** Signed parameters for uploading one blog image from the browser straight to Cloudinary. */
-export async function createBlogImageUpload(): Promise<{ error: string } | SignedImageUpload> {
+/** Signed parameters for uploading one image (blog post or lesson) from the browser straight to Cloudinary. */
+export async function createImageUpload(folderInput: ImageFolder): Promise<{ error: string } | SignedImageUpload> {
   await requireTeacher();
-  const upload = signBlogImageUpload();
+  const folder = parseOrThrow(z.enum(IMAGE_FOLDERS), folderInput);
+  const upload = signImageUpload(folder);
   if (!upload) {
     console.error("Cloudinary env vars are not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)");
     return { error: "Image upload is not configured." };

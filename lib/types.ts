@@ -13,31 +13,54 @@ export interface User {
   password_hash: string | null;
 }
 
-// progress.lessons
+// content.lessons
+// slug UNIQUE, CHECK ^[a-z0-9]+(-[a-z0-9]+)*$; position UNIQUE
+export interface ContentLesson {
+  guid: string; // default gen_random_uuid()
+  slug: string;
+  title: string; // 1–200 chars
+  position: number; // display order
+  is_draft: boolean; // default true; drafts are hidden from students
+  created_at: Date; // timestamptz
+  updated_at: Date | null; // timestamptz
+}
+
+// content.sublessons (a lesson's sections)
+// UNIQUE (lesson_guid, slug); UNIQUE (lesson_guid, position)
+export interface ContentSublesson {
+  guid: string; // default gen_random_uuid()
+  lesson_guid: string; // FK content.lessons ON DELETE CASCADE
+  slug: string;
+  title: string; // 1–200 chars
+  body: string; // MDX, see lib/mdx/lesson-mdx.ts
+  position: number;
+  is_draft: boolean; // default true
+  created_at: Date; // timestamptz
+  updated_at: Date | null; // timestamptz
+}
+
+// progress.lessons: a lesson unlocked for a student. PK (user_guid, lesson_guid)
 export interface ProgressLesson {
-  user_guid: string;
-  lesson_slug: string;
-  unlocked_by?: string;
-  unlocked_at?: Date; // timestamptz
+  user_guid: string; // FK users ON DELETE CASCADE
+  lesson_guid: string; // FK content.lessons ON DELETE CASCADE
+  unlocked_by: string | null; // FK users ON DELETE SET NULL
+  unlocked_at: Date; // timestamptz
 }
 
-// progress.sublessons
+// progress.sublessons: a section a student finished. PK (user_guid, sublesson_guid)
 export interface ProgressSublesson {
-  user_guid: string;
-  lesson_slug: string;
-  sublesson_slug: string;
-  completed_at?: Date; // timestamptz
-  last_position?: string;
+  user_guid: string; // FK users ON DELETE CASCADE
+  sublesson_guid: string; // FK content.sublessons ON DELETE CASCADE
+  completed_at: Date; // timestamptz
 }
 
-// progress.interactions
+// progress.interactions: a student's answer to a quiz. PK (user_guid, sublesson_guid, interaction_id)
 export interface ProgressInteraction {
-  user_guid: string;
-  lesson_slug: string;
-  sublesson_slug: string;
-  interaction_id: string;
-  type: string;
-  response: unknown;
+  user_guid: string; // FK users ON DELETE CASCADE
+  sublesson_guid: string; // FK content.sublessons ON DELETE CASCADE
+  interaction_id: string; // the quiz id
+  type: string; // quiz kind, e.g. "choice"
+  response: unknown; // e.g. ChoiceQuizResponse from lib/quizzes.ts
   completed_at: Date; // timestamptz
 }
 

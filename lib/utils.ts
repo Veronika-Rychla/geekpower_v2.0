@@ -15,3 +15,10 @@ export function hasAdminAccess(role: Role | undefined): boolean {
 export function hasTeacherAccess(role: Role | undefined): boolean {
   return hasAdminAccess(role) || role === "Teacher";
 }
+
+const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** True for a uuid string. Check route params before querying: Postgres throws on a malformed uuid. */
+export function isGuid(value: unknown): value is string {
+  return typeof value === "string" && GUID_PATTERN.test(value);
+}

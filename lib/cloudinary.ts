@@ -9,6 +9,10 @@ export interface SignedImageUpload {
   fields: Record<string, string>;
 }
 
+/** Cloudinary folders an upload may go to. The browser picks one, and the signature pins it. */
+export const IMAGE_FOLDERS = ["blog", "lessons"] as const;
+export type ImageFolder = (typeof IMAGE_FOLDERS)[number];
+
 /** Stored images are capped at this width/height (larger uploads are scaled down on Cloudinary). */
 const MAX_IMAGE_SIZE = 2000;
 
@@ -28,7 +32,7 @@ function getConfig() {
  * secret, SHA-1. The signature stays valid for one hour, and the browser can't change the
  * signed params (folder, allowed formats, size cap). Returns null when env vars are missing.
  */
-export function signBlogImageUpload(): SignedImageUpload | null {
+export function signImageUpload(folder: ImageFolder): SignedImageUpload | null {
   const config = getConfig();
   if (!config) {
     return null;
@@ -36,7 +40,7 @@ export function signBlogImageUpload(): SignedImageUpload | null {
 
   const params: Record<string, string> = {
     allowed_formats: "jpg,jpeg,png,webp,gif",
-    folder: "blog",
+    folder,
     timestamp: String(Math.floor(Date.now() / 1000)),
     transformation: `c_limit,w_${MAX_IMAGE_SIZE},h_${MAX_IMAGE_SIZE}`,
   };

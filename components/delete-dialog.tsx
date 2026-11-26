@@ -22,12 +22,15 @@ interface DeleteDialogProps {
   title: string;
   /** Server action with the item's id already bound, e.g. `deleteBlogPost.bind(null, guid)`. */
   onDelete: () => Promise<unknown>;
+  /** Extra consequences to spell out, e.g. lost student progress. */
+  description?: string;
 }
 
 export function DeleteDialog({
   itemLabel,
   title,
   onDelete,
+  description,
 }: DeleteDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -58,6 +61,7 @@ export function DeleteDialog({
           <DialogDescription>
             &ldquo;{title}&rdquo; will be removed for everyone. This can&apos;t
             be undone.
+            {description && <> {description}</>}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

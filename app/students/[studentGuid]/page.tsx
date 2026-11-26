@@ -66,16 +66,16 @@ export default async function StudentDetailPage({
           ).length;
 
           return (
-            <Card key={lesson.slug}>
+            <Card key={lesson.guid}>
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
-                  <CardTitle>{lesson.title}</CardTitle>
+                  <CardTitle>{lesson.displayTitle}</CardTitle>
                   {!lesson.unlocked && (
                     <form
                       action={unlockLesson.bind(
                         null,
                         student.guid,
-                        lesson.slug,
+                        lesson.guid,
                       )}
                     >
                       <Button type="submit" size="sm" variant="outline">
@@ -107,7 +107,7 @@ export default async function StudentDetailPage({
                 <div className="flex flex-col gap-1.5 px-6 pb-6">
                   {lesson.sublessons.map((sublesson) => (
                     <div
-                      key={sublesson.slug}
+                      key={sublesson.guid}
                       className="flex items-center gap-2 text-sm"
                     >
                       {sublesson.completedAt ? (
@@ -120,7 +120,7 @@ export default async function StudentDetailPage({
                           sublesson.completedAt ? "" : "text-muted-foreground"
                         }
                       >
-                        {sublesson.title}
+                        {sublesson.displayTitle}
                       </span>
                       {sublesson.completedAt && (
                         <span className="text-xs text-muted-foreground">
