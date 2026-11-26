@@ -1,18 +1,19 @@
 /*
- * The robot's colours and animations. Palette and the calm/wild animations
- * come from the public website (geekpower_website/components/mascot/); the
- * loading and error ones were added here.
+ * The robot's colours and animations. The palette follows the color theme
+ * (app/globals.css), as on the website; the calm/wild animations come from the
+ * public website (geekpower_website/components/mascot/), and the loading and
+ * error ones were added here.
  */
 
 .mascot {
-  --mascot-text: #e9e9ed;
-  --mascot-accent: #9184d9;
-  --mascot-200: #e7e5fe;
-  --mascot-300: #d2cefd;
-  --mascot-500: #968ae0;
-  --mascot-600: #796cbf;
-  --mascot-800: #423a6a;
-  --mascot-900: #2b2741;
+  --mascot-text: var(--theme-text);
+  --mascot-accent: var(--theme-accent);
+  --mascot-200: var(--theme-accent-200);
+  --mascot-300: var(--theme-accent-300);
+  --mascot-500: var(--theme-accent-500);
+  --mascot-600: var(--theme-accent-600);
+  --mascot-800: var(--theme-accent-800);
+  --mascot-900: var(--theme-accent-900);
 }
 
 /* Calm robot: hovers, head floats a beat behind the body, blinks, antenna light pulses. */
@@ -91,3 +92,6 @@
 
 .mascot-glow { filter: drop-shadow(0 0 18px color-mix(in srgb, var(--mascot-accent) 35%, transparent)); }
 .mascot-glow-strong { filter: drop-shadow(0 0 18px color-mix(in srgb, var(--mascot-accent) 45%, transparent)); }
+
+/* Small sizes like the logo: every outline bolder (the art draws them all at 1.6). */
+.mascot-thin [stroke-width] { stroke-width: 2.4; }

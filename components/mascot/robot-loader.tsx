@@ -89,7 +89,7 @@ export function RobotLoader({ size = "page", className }: RobotLoaderProps) {
         <span
           aria-hidden
           className="robot-loader-byte absolute top-[22%] left-[18%] rounded-[3px] px-1 font-mono text-[9px] leading-tight font-bold"
-          style={{ background: "#968ae0", color: "#2b2741" }}
+          style={{ background: "var(--theme-accent-500)", color: "var(--theme-accent-900)" }}
         >
           01
         </span>

@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
 import { useSession } from "next-auth/react";
+
+import { MascotArt } from "@/components/mascot/mascot-art";
 
 export function SiteLogo() {
   const { data: session } = useSession();
 
   const content = (
     <>
-      <Zap className="size-5 text-primary" />
+      <span className="block size-7">
+        <MascotArt thin scenery={false} />
+      </span>
       GeekPower
     </>
   );

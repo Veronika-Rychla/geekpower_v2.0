@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
-import { LogOut, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { useNavLinks } from "@/components/site-nav";
 
@@ -40,14 +39,6 @@ export function MobileMenu() {
                 {link.label}
               </Link>
             ))}
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="mt-3 flex items-center gap-2 border-t border-border px-2 pt-4 text-left text-xs text-destructive/80 transition-colors hover:text-destructive"
-            >
-              <LogOut className="size-3.5" />
-              Log out
-            </button>
           </nav>
         </div>
       )}

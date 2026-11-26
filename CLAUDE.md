@@ -50,6 +50,8 @@ GeekPower is an English-for-IT course app (UI and lesson content are in Czech).
 
 shadcn components (style `base-vega`, built on `@base-ui/react`, lucide icons) live in `components/ui/`; add new ones with the shadcn CLI. Use `cn()` from `lib/utils.ts` for class merging and `formatDateTime()` from `lib/dates.ts` for showing timestamps.
 
+Colors come from the color theme, shared with the public website: `app/globals.css` defines the website's default palette as `--theme-*` variables and derives every shadcn token from them, so use the tokens (`bg-background`, `text-primary`, …) or `var(--theme-*)`, never hard-coded colors. The theme picker (`components/theme-picker.tsx`, opened from the user menu under the user's name in the header, or a palette button when signed out) saves the six picked colors in the `gp-theme` cookie on the parent domain, and the website does the same, so a pick on either site applies on both. An inline `<head>` script applies it before first paint and drops the `dark` class for a light background. `lib/theme.ts` mirrors `geekpower_website/lib/theme.ts` (cookie format, presets, ramp math), so change both together.
+
 <!-- - No hard-coded colors, px values or inline styles. -->
 
 ## Testing

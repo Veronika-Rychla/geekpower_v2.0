@@ -24,5 +24,6 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // The tab icons (app/favicon.ico, icon.svg, apple-icon.png) must load signed out too.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)"],
 };

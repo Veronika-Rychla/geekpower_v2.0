@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 1 76 76">
+  <!-- Mascot head (from components/mascot/MascotArt.tsx), cropped and with a bolder outline for tab size. -->
+  <g stroke="#d2cefd" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M55 28.5 C55 17 60 10.5 69.5 10.5" fill="none"/>
+    <circle cx="73.8" cy="12.2" r="4.6" fill="#968ae0"/>
+    <path d="M31 33 H79 Q88 33 88 42 V63 Q88 72 79 72 H31 Q22 72 22 63 V42 Q22 33 31 33 Z" fill="#2b2741"/>
+    <circle cx="32" cy="53" r="14" fill="#423a6a"/>
+    <circle cx="70" cy="53" r="14" fill="#423a6a"/>
+    <path d="M46 52.5 Q51 50 56 52.5" fill="none"/>
+  </g>
+  <ellipse cx="36.7" cy="52" rx="4" ry="5.5" fill="#e9e9ed"/>
+  <ellipse cx="63.3" cy="52" rx="4" ry="5.5" fill="#e9e9ed"/>
+</svg>

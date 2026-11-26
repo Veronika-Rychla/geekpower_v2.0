@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -28,8 +29,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const session = await auth();
 
   return (
+    // suppressHydrationWarning: the inline script below sets a saved color
+    // theme on <html> (and drops `dark` for a light one).
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "dark",
         "h-full",
@@ -40,6 +44,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         inter.variable,
       )}
     >
+      <head>
+        {/* Applies the theme picked here or on the website before first paint (see lib/theme.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <Providers session={session}>
           <SiteHeader />
