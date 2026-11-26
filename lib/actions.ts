@@ -7,16 +7,35 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { sql } from "@/app/database";
-import { requireAdmin, requireTeacher, requireUser, type CurrentUser } from "@/lib/guards";
+import {
+  requireAdmin,
+  requireTeacher,
+  requireUser,
+  type CurrentUser,
+} from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
 import { getUserByEmail } from "@/lib/data";
-import { getAccessibleSublesson, getInteractions, getLessons } from "@/lib/lessons";
+import {
+  getAccessibleSublesson,
+  getInteractions,
+  getLessons,
+} from "@/lib/lessons";
 import { compileLessonSource, getLessonQuizzes } from "@/lib/mdx/lesson-mdx";
 import { gradeQuiz, isResponseCorrect } from "@/lib/quizzes";
 import { SLUG_MAX_LENGTH, SLUG_PATTERN } from "@/lib/slug";
-import { ANNOUNCEMENT_TYPES, BLOG_POST_TYPES, type AnnouncementType, type BlogPostType } from "@/lib/types";
+import {
+  ANNOUNCEMENT_TYPES,
+  BLOG_POST_TYPES,
+  type AnnouncementType,
+  type BlogPostType,
+} from "@/lib/types";
 import { BLOG_POSTS_CACHE_TAG } from "@/lib/blog";
-import { IMAGE_FOLDERS, signImageUpload, type ImageFolder, type SignedImageUpload } from "@/lib/cloudinary";
+import {
+  IMAGE_FOLDERS,
+  signImageUpload,
+  type ImageFolder,
+  type SignedImageUpload,
+} from "@/lib/cloudinary";
 import { estimateReadTime } from "@/components/blog/markdown/read-time";
 
 const RESET_TOKEN_TTL_HOURS = 24;
@@ -32,13 +51,19 @@ const lessonSchema = z.object({
     .string()
     .trim()
     .min(1, "Title is required.")
-    .max(CONTENT_TITLE_MAX_LENGTH, `Title must be at most ${CONTENT_TITLE_MAX_LENGTH} characters.`),
+    .max(
+      CONTENT_TITLE_MAX_LENGTH,
+      `Title must be at most ${CONTENT_TITLE_MAX_LENGTH} characters.`,
+    ),
   slug: z
     .string()
     .trim()
     .min(1, "Slug is required.")
     .max(SLUG_MAX_LENGTH, `Slug must be at most ${SLUG_MAX_LENGTH} characters.`)
-    .regex(SLUG_PATTERN, "Slug may contain only lowercase letters, digits and single dashes."),
+    .regex(
+      SLUG_PATTERN,
+      "Slug may contain only lowercase letters, digits and single dashes.",
+    ),
   isDraft: z.boolean(),
 });
 const sublessonSchema = lessonSchema.extend({
@@ -46,7 +71,10 @@ const sublessonSchema = lessonSchema.extend({
     .string()
     .trim()
     .min(1, "Content is required.")
-    .max(SUBLESSON_BODY_MAX_LENGTH, `Content must be at most ${SUBLESSON_BODY_MAX_LENGTH} characters.`),
+    .max(
+      SUBLESSON_BODY_MAX_LENGTH,
+      `Content must be at most ${SUBLESSON_BODY_MAX_LENGTH} characters.`,
+    ),
 });
 
 type LessonInput = { title: string; slug: string; isDraft: boolean };
@@ -64,7 +92,10 @@ const announcementSchema = z.object({
     .string()
     .trim()
     .min(1, "Title is required.")
-    .max(ANNOUNCEMENT_TITLE_MAX_LENGTH, `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`),
+    .max(
+      ANNOUNCEMENT_TITLE_MAX_LENGTH,
+      `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
+    ),
   body: z.string().trim().min(1, "Text is required.").max(10_000),
 });
 const blogPostSchema = z.object({
@@ -72,8 +103,15 @@ const blogPostSchema = z.object({
     .string()
     .trim()
     .min(1, "Title is required.")
-    .max(ANNOUNCEMENT_TITLE_MAX_LENGTH, `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`),
-  summary: z.string().trim().min(1, "Summary is required.").max(1_000, "Summary must be at most 1000 characters."),
+    .max(
+      ANNOUNCEMENT_TITLE_MAX_LENGTH,
+      `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
+    ),
+  summary: z
+    .string()
+    .trim()
+    .min(1, "Summary is required.")
+    .max(1_000, "Summary must be at most 1000 characters."),
   message: z.string().trim().min(1, "Message is required.").max(100_000),
   type: z
     .array(z.enum(BLOG_POST_TYPES))
@@ -82,7 +120,13 @@ const blogPostSchema = z.object({
   isDraft: z.boolean(),
 });
 
-type BlogPostInput = { title: string; summary: string; message: string; type: BlogPostType[]; isDraft: boolean };
+type BlogPostInput = {
+  title: string;
+  summary: string;
+  message: string;
+  type: BlogPostType[];
+  isDraft: boolean;
+};
 
 /** Parses input that the form validated already; a failure here means a bypassed or buggy client. */
 function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
@@ -94,9 +138,14 @@ function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
 }
 
 /** Like `parseOrThrow`, but returns the first issue as a form-displayable `{ error }`. */
-function parseForForm<T>(schema: z.ZodType<T>, input: unknown): { error: string } | { data: T } {
+function parseForForm<T>(
+  schema: z.ZodType<T>,
+  input: unknown,
+): { error: string } | { data: T } {
   const result = schema.safeParse(input);
-  return result.success ? { data: result.data } : { error: result.error.issues[0].message };
+  return result.success
+    ? { data: result.data }
+    : { error: result.error.issues[0].message };
 }
 
 /** Issues a fresh set-password token for a user, replacing any outstanding one. */
@@ -126,8 +175,14 @@ export async function completeSublesson(sublessonGuidInput: string) {
   const quizzes = await getLessonQuizzes(sublesson.body);
   if (quizzes.length > 0) {
     const interactions = await getInteractions(user.guid, sublesson.guid);
-    if (!quizzes.every((quiz) => isResponseCorrect(interactions[quiz.id]?.response))) {
-      throw new Error("Answer all quizzes correctly before finishing this section");
+    if (
+      !quizzes.every((quiz) =>
+        isResponseCorrect(interactions[quiz.id]?.response),
+      )
+    ) {
+      throw new Error(
+        "Answer all quizzes correctly before finishing this section",
+      );
     }
   }
 
@@ -147,21 +202,29 @@ export async function completeSublesson(sublessonGuidInput: string) {
   }
 }
 
-async function getNextSublessonHref(user: CurrentUser, sublessonGuid: string): Promise<string | null> {
+async function getNextSublessonHref(
+  user: CurrentUser,
+  sublessonGuid: string,
+): Promise<string | null> {
   const lessons = await getLessons(user);
-  const lessonIndex = lessons.findIndex((l) => l.sublessons.some((s) => s.guid === sublessonGuid));
+  const lessonIndex = lessons.findIndex((l) =>
+    l.sublessons.some((s) => s.guid === sublessonGuid),
+  );
   if (lessonIndex === -1) {
     return null;
   }
 
   const { slug, sublessons } = lessons[lessonIndex];
-  const next = sublessons[sublessons.findIndex((s) => s.guid === sublessonGuid) + 1];
+  const next =
+    sublessons[sublessons.findIndex((s) => s.guid === sublessonGuid) + 1];
   if (next) {
     return `/lessons/${slug}/${next.slug}`;
   }
 
   // The lesson index route resumes at the first unfinished section.
-  const nextLesson = lessons.slice(lessonIndex + 1).find((l) => l.sublessons.length > 0);
+  const nextLesson = lessons
+    .slice(lessonIndex + 1)
+    .find((l) => l.sublessons.length > 0);
   return nextLesson ? `/lessons/${nextLesson.slug}` : null;
 }
 
@@ -176,7 +239,9 @@ export async function answerQuiz(
   const quizId = parseOrThrow(z.string().max(64), quizIdInput);
 
   const sublesson = await getAccessibleSublesson(user, sublessonGuid);
-  const quiz = sublesson && (await getLessonQuizzes(sublesson.body)).find((q) => q.id === quizId);
+  const quiz =
+    sublesson &&
+    (await getLessonQuizzes(sublesson.body)).find((q) => q.id === quizId);
   if (!sublesson || !quiz) {
     throw new Error("Not found");
   }
@@ -197,13 +262,18 @@ export async function answerQuiz(
   return { correct: graded.correct };
 }
 
-export async function unlockLesson(studentGuidInput: string, lessonGuidInput: string) {
+export async function unlockLesson(
+  studentGuidInput: string,
+  lessonGuidInput: string,
+) {
   const teacher = await requireTeacher();
   const studentGuid = parseOrThrow(guidSchema, studentGuidInput);
   const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
 
-  const [student] = await sql`SELECT 1 FROM users WHERE guid = ${studentGuid} AND role = 'User'`;
-  const [lesson] = await sql`SELECT 1 FROM content.lessons WHERE guid = ${lessonGuid}`;
+  const [student] =
+    await sql`SELECT 1 FROM users WHERE guid = ${studentGuid} AND role = 'User'`;
+  const [lesson] =
+    await sql`SELECT 1 FROM content.lessons WHERE guid = ${lessonGuid}`;
   if (!student || !lesson) {
     throw new Error("Not found");
   }
@@ -244,7 +314,8 @@ export async function createLesson(input: LessonInput): Promise<ContentResult> {
       VALUES (${slug}, ${title}, ${isDraft}, (SELECT COALESCE(MAX(position), 0) + 1 FROM content.lessons))
     `;
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: "Another lesson already uses this slug." };
+    if (isUniqueViolation(error))
+      return { error: "Another lesson already uses this slug." };
     throw error;
   }
 
@@ -252,7 +323,10 @@ export async function createLesson(input: LessonInput): Promise<ContentResult> {
   return { success: true, href: "/lessons" };
 }
 
-export async function updateLesson(guidInput: string, input: LessonInput): Promise<ContentResult> {
+export async function updateLesson(
+  guidInput: string,
+  input: LessonInput,
+): Promise<ContentResult> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
   const parsed = parseForForm(lessonSchema, input);
@@ -268,7 +342,8 @@ export async function updateLesson(guidInput: string, input: LessonInput): Promi
     `;
     if (updated.length === 0) throw new Error("Not found");
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: "Another lesson already uses this slug." };
+    if (isUniqueViolation(error))
+      return { error: "Another lesson already uses this slug." };
     throw error;
   }
 
@@ -277,7 +352,9 @@ export async function updateLesson(guidInput: string, input: LessonInput): Promi
 }
 
 /** Deletes the lesson with its sections and every student's progress in it (FK cascades). */
-export async function deleteLesson(guidInput: string): Promise<{ success: true }> {
+export async function deleteLesson(
+  guidInput: string,
+): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
 
@@ -288,26 +365,38 @@ export async function deleteLesson(guidInput: string): Promise<{ success: true }
 }
 
 /** Compiles a section for the editor's live preview, or returns the compile error to show instead. */
-export async function previewSublesson(sourceInput: string): Promise<{ compiledSource: string } | { error: string }> {
+export async function previewSublesson(
+  sourceInput: string,
+): Promise<{ compiledSource: string } | { error: string }> {
   await requireTeacher();
-  const source = parseOrThrow(z.string().max(SUBLESSON_BODY_MAX_LENGTH), sourceInput);
+  const source = parseOrThrow(
+    z.string().max(SUBLESSON_BODY_MAX_LENGTH),
+    sourceInput,
+  );
 
   const result = await compileLessonSource(source);
   return "error" in result ? result : { compiledSource: result.compiledSource };
 }
 
 /** Like `parseForForm`, then also requires the body to compile. */
-async function parseSublessonInput(input: unknown): Promise<{ error: string } | { data: z.infer<typeof sublessonSchema> }> {
+async function parseSublessonInput(
+  input: unknown,
+): Promise<{ error: string } | { data: z.infer<typeof sublessonSchema> }> {
   const parsed = parseForForm(sublessonSchema, input);
   if ("error" in parsed) return parsed;
   const compiled = await compileLessonSource(parsed.data.body);
   if ("error" in compiled) {
-    return { error: `The content has an error, so it can't be saved:\n${compiled.error}` };
+    return {
+      error: `The content has an error, so it can't be saved:\n${compiled.error}`,
+    };
   }
   return parsed;
 }
 
-export async function createSublesson(lessonGuidInput: string, input: SublessonInput): Promise<ContentResult> {
+export async function createSublesson(
+  lessonGuidInput: string,
+  input: SublessonInput,
+): Promise<ContentResult> {
   await requireTeacher();
   const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
   const parsed = await parseSublessonInput(input);
@@ -327,7 +416,10 @@ export async function createSublesson(lessonGuidInput: string, input: SublessonI
     if (!row) throw new Error("Not found");
     lessonSlug = row.lesson_slug as string;
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: "Another section of this lesson already uses this slug." };
+    if (isUniqueViolation(error))
+      return {
+        error: "Another section of this lesson already uses this slug.",
+      };
     throw error;
   }
 
@@ -335,7 +427,10 @@ export async function createSublesson(lessonGuidInput: string, input: SublessonI
   return { success: true, href: `/lessons/${lessonSlug}/${slug}` };
 }
 
-export async function updateSublesson(guidInput: string, input: SublessonInput): Promise<ContentResult> {
+export async function updateSublesson(
+  guidInput: string,
+  input: SublessonInput,
+): Promise<ContentResult> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
   const parsed = await parseSublessonInput(input);
@@ -354,7 +449,10 @@ export async function updateSublesson(guidInput: string, input: SublessonInput):
     if (!row) throw new Error("Not found");
     lessonSlug = row.lesson_slug as string;
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: "Another section of this lesson already uses this slug." };
+    if (isUniqueViolation(error))
+      return {
+        error: "Another section of this lesson already uses this slug.",
+      };
     throw error;
   }
 
@@ -363,11 +461,106 @@ export async function updateSublesson(guidInput: string, input: SublessonInput):
 }
 
 /** Deletes the section and every student's progress in it (FK cascades). */
-export async function deleteSublesson(guidInput: string): Promise<{ success: true }> {
+export async function deleteSublesson(
+  guidInput: string,
+): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
 
   await sql`DELETE FROM content.sublessons WHERE guid = ${guid}`;
+
+  revalidateLessonContent();
+  return { success: true };
+}
+
+type ReorderResult = { error: string } | { success: true };
+
+const REORDER_CONFLICT =
+  "The lessons changed in the meantime. Reload the page and try again.";
+
+/** Distinct guids in their new display order. */
+const orderSchema = z
+  .array(guidSchema)
+  .max(1000)
+  .refine((guids) => new Set(guids).size === guids.length);
+
+/** True when `ordered` is a permutation of `current`, i.e. nothing was added or removed since the page loaded. */
+function isSameSet(ordered: string[], current: string[]): boolean {
+  const currentSet = new Set(current);
+  return (
+    ordered.length === currentSet.size &&
+    ordered.every((guid) => currentSet.has(guid))
+  );
+}
+
+/*
+ * Positions are UNIQUE and checked per row, so renumbering in place can collide
+ * midway. Each reorder first shifts the whole group above its current maximum,
+ * then writes the final 1..n, both in one transaction.
+ */
+
+/** Sets the display order of all lessons to `guidsInput` (every lesson's guid, drafts included). */
+export async function reorderLessons(
+  guidsInput: string[],
+): Promise<ReorderResult> {
+  await requireTeacher();
+  const guids = parseOrThrow(orderSchema, guidsInput);
+
+  const current = await sql`SELECT guid::text AS guid FROM content.lessons`;
+  if (
+    !isSameSet(
+      guids,
+      current.map((row) => row.guid as string),
+    )
+  )
+    return { error: REORDER_CONFLICT };
+
+  await sql.transaction([
+    sql`UPDATE content.lessons SET position = position + (SELECT MAX(position) FROM content.lessons)`,
+    sql`
+      UPDATE content.lessons l
+      SET position = o.position
+      FROM unnest(${guids}::text[]) WITH ORDINALITY AS o(guid, position)
+      WHERE l.guid::text = o.guid
+    `,
+  ]);
+
+  revalidateLessonContent();
+  return { success: true };
+}
+
+/** Sets the display order of a lesson's sections to `guidsInput` (every section's guid, drafts included). */
+export async function reorderSublessons(
+  lessonGuidInput: string,
+  guidsInput: string[],
+): Promise<ReorderResult> {
+  await requireTeacher();
+  const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
+  const guids = parseOrThrow(orderSchema, guidsInput);
+
+  const current =
+    await sql`SELECT guid::text AS guid FROM content.sublessons WHERE lesson_guid::text = ${lessonGuid}`;
+  if (
+    !isSameSet(
+      guids,
+      current.map((row) => row.guid as string),
+    )
+  )
+    return { error: REORDER_CONFLICT };
+
+  await sql.transaction([
+    sql`
+      UPDATE content.sublessons
+      SET position = position + (SELECT MAX(position) FROM content.sublessons WHERE lesson_guid::text = ${lessonGuid})
+      WHERE lesson_guid::text = ${lessonGuid}
+    `,
+    sql`
+      UPDATE content.sublessons s
+      SET position = o.position
+      FROM unnest(${guids}::text[]) WITH ORDINALITY AS o(guid, position)
+      WHERE s.lesson_guid::text = ${lessonGuid} AND s.guid::text = o.guid
+    `,
+  ]);
 
   revalidateLessonContent();
   return { success: true };
@@ -404,7 +597,9 @@ export async function createStudent(input: {
     // student record and a valid token both exist; log the link so it can be
     // shared manually while the issue is sorted out.
     console.error(`Failed to send set-password email to ${data.email}:`, error);
-    console.error(`Set-password link: ${process.env.APP_URL ?? "http://localhost:3000"}/set-password?token=${token}`);
+    console.error(
+      `Set-password link: ${process.env.APP_URL ?? "http://localhost:3000"}/set-password?token=${token}`,
+    );
   }
 
   revalidatePath("/students");
@@ -412,7 +607,9 @@ export async function createStudent(input: {
 }
 
 /** Student-facing "forgot password" flow. Always reports success so we don't leak which emails are registered. */
-export async function requestPasswordReset(emailInput: string): Promise<{ success: true }> {
+export async function requestPasswordReset(
+  emailInput: string,
+): Promise<{ success: true }> {
   const email = z.email().safeParse(emailInput);
   const user = email.success ? await getUserByEmail(email.data) : null;
   if (user) {
@@ -420,7 +617,10 @@ export async function requestPasswordReset(emailInput: string): Promise<{ succes
     try {
       await sendSetPasswordEmail(user.email, user.first_name, token);
     } catch (error) {
-      console.error(`Failed to send password reset email to ${user.email}:`, error);
+      console.error(
+        `Failed to send password reset email to ${user.email}:`,
+        error,
+      );
     }
   }
 
@@ -433,7 +633,13 @@ export async function setPassword(
 ): Promise<{ error: string } | { success: true }> {
   const token = parseOrThrow(z.string().max(128), tokenInput);
   const password = parseForForm(
-    z.string().min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`).max(200),
+    z
+      .string()
+      .min(
+        PASSWORD_MIN_LENGTH,
+        `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+      )
+      .max(200),
     passwordInput,
   );
   if ("error" in password) return password;
@@ -456,7 +662,12 @@ export async function setPassword(
 
 export async function updateUser(
   guidInput: string,
-  input: { firstName: string; lastName: string; email: string; status: "Active" | "Inactive" },
+  input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    status: "Active" | "Inactive";
+  },
 ): Promise<{ error: string } | { success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
@@ -522,7 +733,9 @@ export async function updateAnnouncement(
   return { success: true };
 }
 
-export async function deleteAnnouncement(guidInput: string): Promise<{ success: true }> {
+export async function deleteAnnouncement(
+  guidInput: string,
+): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
 
@@ -576,19 +789,26 @@ export async function updateBlogPost(
 }
 
 /** Signed parameters for uploading one image (blog post or lesson) from the browser straight to Cloudinary. */
-export async function createImageUpload(folderInput: ImageFolder): Promise<{ error: string } | SignedImageUpload> {
+export async function createImageUpload(
+  folderInput: ImageFolder,
+): Promise<{ error: string } | SignedImageUpload> {
   await requireTeacher();
   const folder = parseOrThrow(z.enum(IMAGE_FOLDERS), folderInput);
   const upload = signImageUpload(folder);
   if (!upload) {
-    console.error("Cloudinary env vars are not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)");
+    console.error(
+      "Cloudinary env vars are not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)",
+    );
     return { error: "Image upload is not configured." };
   }
   return upload;
 }
 
 /** With `redirectToBlog`, navigates to /blog afterwards (used on the deleted post's own page). */
-export async function deleteBlogPost(guidInput: string, redirectToBlog = false): Promise<{ success: true }> {
+export async function deleteBlogPost(
+  guidInput: string,
+  redirectToBlog = false,
+): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
 
@@ -603,7 +823,10 @@ export async function deleteBlogPost(guidInput: string, redirectToBlog = false):
   return { success: true };
 }
 
-export async function setContactMessageResolved(guidInput: string, resolvedInput: boolean): Promise<{ success: true }> {
+export async function setContactMessageResolved(
+  guidInput: string,
+  resolvedInput: boolean,
+): Promise<{ success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
   const resolved = parseOrThrow(z.boolean(), resolvedInput);
@@ -614,7 +837,9 @@ export async function setContactMessageResolved(guidInput: string, resolvedInput
   return { success: true };
 }
 
-export async function deleteContactMessage(guidInput: string): Promise<{ success: true }> {
+export async function deleteContactMessage(
+  guidInput: string,
+): Promise<{ success: true }> {
   await requireAdmin();
   const guid = parseOrThrow(guidSchema, guidInput);
 
