@@ -45,9 +45,9 @@ export interface StudentLessonDetail extends LessonMeta {
 }
 
 function titleFromSlug(slug: string): string {
-  const withoutOrderPrefix = slug.replace(/^\d+-/, "");
+  const withoutOrderPrefix = slug.replace(/^\d+[-_]/, "");
   return withoutOrderPrefix
-    .split("-")
+    .split(/[-_]/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
@@ -57,9 +57,9 @@ function titleFromContent(source: string, fallback: string): string {
   return match ? match[1].trim() : fallback;
 }
 
-/** Prefixes a title with the slug's leading order number, e.g. "01-intro" + "Intro" -> "01 - Intro". */
+/** Prefixes a title with the slug's leading order number, e.g. "01-intro" (or "01_intro") + "Intro" -> "01 - Intro". */
 function withOrderPrefix(slug: string, title: string): string {
-  const match = slug.match(/^(\d+)-/);
+  const match = slug.match(/^(\d+)[-_]/);
   return match ? `${match[1]} - ${title}` : title;
 }
 
@@ -75,25 +75,58 @@ export function lessonExists(lessonSlug: string): boolean {
   return listLessonSlugs().includes(lessonSlug);
 }
 
+/**
+ * Sublesson files: `.mdx` (MDX, may contain `<Quiz>`) or `.md` (plain Markdown).
+ * The slug is the file name without its extension.
+ */
+const SUBLESSON_EXTENSIONS = [".mdx", ".md"] as const;
+export type SublessonFormat = "mdx" | "md";
+
+function sublessonFiles(lessonSlug: string): Map<string, string> {
+  const files = new Map<string, string>();
+  for (const file of fs.readdirSync(path.join(LESSONS_DIR, lessonSlug))) {
+    const ext = SUBLESSON_EXTENSIONS.find((e) => file.endsWith(e));
+    if (!ext) {
+      continue;
+    }
+    const slug = file.slice(0, -ext.length);
+    // If both 01-intro.md and 01-intro.mdx exist, the .mdx one wins.
+    if (!files.has(slug) || ext === ".mdx") {
+      files.set(slug, file);
+    }
+  }
+  return files;
+}
+
 function listSublessonSlugs(lessonSlug: string): string[] {
-  return fs
-    .readdirSync(path.join(LESSONS_DIR, lessonSlug))
-    .filter((file) => file.endsWith(".mdx"))
-    .map((file) => file.replace(/\.mdx$/, ""))
-    .sort();
+  return [...sublessonFiles(lessonSlug).keys()].sort();
 }
 
-export function getSublessonSource(lessonSlug: string, sublessonSlug: string): string {
-  return fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, `${sublessonSlug}.mdx`), "utf8");
+export function getSublessonFile(
+  lessonSlug: string,
+  sublessonSlug: string,
+): { source: string; format: SublessonFormat } {
+  const file = sublessonFiles(lessonSlug).get(sublessonSlug);
+  if (!file) {
+    throw new Error(`Sublesson not found: ${lessonSlug}/${sublessonSlug}`);
+  }
+  return {
+    source: fs.readFileSync(path.join(LESSONS_DIR, lessonSlug, file), "utf8"),
+    format: file.endsWith(".mdx") ? "mdx" : "md",
+  };
 }
 
-/** The ids of every `<Quiz id="...">` block in a sublesson's MDX source. */
-export function extractQuizIds(source: string): string[] {
+/** The ids of every `<Quiz id="...">` block in a sublesson. Plain `.md` files can't contain quizzes. */
+export function extractQuizIds(source: string, format: SublessonFormat): string[] {
+  if (format !== "mdx") {
+    return [];
+  }
   return [...source.matchAll(/<Quiz\s+id="([^"]+)"/g)].map((match) => match[1]);
 }
 
 export function getQuizIds(lessonSlug: string, sublessonSlug: string): string[] {
-  return extractQuizIds(getSublessonSource(lessonSlug, sublessonSlug));
+  const { source, format } = getSublessonFile(lessonSlug, sublessonSlug);
+  return extractQuizIds(source, format);
 }
 
 /** This user's saved responses for every interactive block in a sublesson, keyed by interaction id. */
@@ -138,7 +171,7 @@ function buildLessonMeta(
     slug: lessonSlug,
     title: withOrderPrefix(lessonSlug, titleFromSlug(lessonSlug)),
     sublessons: listSublessonSlugs(lessonSlug).map((sublessonSlug) => {
-      const source = getSublessonSource(lessonSlug, sublessonSlug);
+      const { source } = getSublessonFile(lessonSlug, sublessonSlug);
       return {
         slug: sublessonSlug,
         title: withOrderPrefix(sublessonSlug, titleFromContent(source, titleFromSlug(sublessonSlug))),

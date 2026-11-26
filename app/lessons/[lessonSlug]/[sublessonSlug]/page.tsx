@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Quiz, type QuizProps } from "@/components/lessons/quiz";
 import { completeSublesson } from "@/lib/actions";
 import { remarkCallouts } from "@/lib/mdx/remark-callouts";
-import { extractQuizIds, getInteractions, getLesson, getSublessonSource } from "@/lib/lessons";
+import { extractQuizIds, getInteractions, getLesson, getSublessonFile } from "@/lib/lessons";
 
 export default async function SublessonPage({
   params,
@@ -28,10 +28,10 @@ export default async function SublessonPage({
     notFound();
   }
 
-  const source = getSublessonSource(lessonSlug, sublessonSlug);
+  const { source, format } = getSublessonFile(lessonSlug, sublessonSlug);
   const interactions = await getInteractions(session.user.guid, lessonSlug, sublessonSlug);
 
-  const quizIds = extractQuizIds(source);
+  const quizIds = extractQuizIds(source, format);
   const allQuizzesCorrect = quizIds.every((quizId) => {
     const response = interactions[quizId]?.response as { correct?: boolean } | undefined;
     return response?.correct === true;
@@ -60,7 +60,7 @@ export default async function SublessonPage({
       Quiz: QuizBlock,
     },
     options: {
-      mdxOptions: { remarkPlugins: [remarkGfm, remarkFlexibleMarkers, remarkCallouts] },
+      mdxOptions: { format, remarkPlugins: [remarkGfm, remarkFlexibleMarkers, remarkCallouts] },
       blockJS: false,
     },
   });
