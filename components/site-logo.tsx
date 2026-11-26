@@ -17,18 +17,10 @@ export function SiteLogo() {
     </>
   );
 
-  if (!session?.user) {
-    return (
-      <span className="flex items-center gap-2 font-semibold tracking-tight">
-        {content}
-      </span>
-    );
-  }
-
   return (
     <span className="flex items-start">
       <Link
-        href="/dashboard"
+        href={!session?.user ? "/" : "/dashboard"}
         className="flex items-center gap-2 font-semibold tracking-tight"
       >
         {content}
