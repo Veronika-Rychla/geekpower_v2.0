@@ -39,11 +39,14 @@ import {
 } from "@/lib/actions";
 import type { LessonMeta, SublessonMeta } from "@/lib/lessons";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 function DraftBadge() {
+  const t = useDictionary().common;
   return (
     <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-normal text-muted-foreground">
-      Draft
+      {t.draft}
     </span>
   );
 }
@@ -54,14 +57,14 @@ function DraftBadge() {
  */
 function SortableList<T extends { guid: string }>({
   items,
-  label,
+  saveError,
   save,
   className,
   children,
 }: {
   items: T[];
-  /** What's being reordered, for the error message, e.g. "lessons". */
-  label: string;
+  /** Shown when saving the new order fails. */
+  saveError: string;
   save: (guids: string[]) => Promise<{ error: string } | { success: true }>;
   className?: string;
   children: (item: T) => ReactNode;
@@ -90,7 +93,7 @@ function SortableList<T extends { guid: string }>({
         const result = await save(reordered.map((item) => item.guid));
         if ("error" in result) setError(result.error);
       } catch {
-        setError(`Couldn't save the new order of ${label}. Try again.`);
+        setError(saveError);
       }
     });
   }
@@ -184,6 +187,9 @@ function SublessonRow({
   sublesson: SublessonMeta;
   editing: boolean;
 }) {
+  const dictionary = useDictionary();
+  const t = dictionary.lessons;
+
   return (
     <div className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted/50">
       <div className="flex min-w-0 items-center gap-2">
@@ -202,17 +208,19 @@ function SublessonRow({
         <div className="flex shrink-0 items-center">
           <Link
             href={`/lesson-editor/${sublesson.guid}`}
-            aria-label="Edit section"
-            title="Edit section"
+            aria-label={t.editSection}
+            title={t.editSection}
             className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
           >
             <Pencil className="size-3.5" />
           </Link>
           <DeleteDialog
-            itemLabel="section"
+            item="section"
             title={sublesson.title}
-            description="Every student's progress in it is deleted too."
-            confirmText={`delete ${sublesson.title}`}
+            description={t.deleteSectionDescription}
+            confirmText={fill(dictionary.deleteDialog.confirmPhrase, {
+              title: sublesson.title,
+            })}
             onDelete={deleteSublesson.bind(null, sublesson.guid)}
           />
         </div>
@@ -228,6 +236,9 @@ function LessonCard({
   lesson: LessonMeta;
   editing: boolean;
 }) {
+  const dictionary = useDictionary();
+  const t = dictionary.lessons;
+
   return (
     <Card className={cn(lesson.isDraft && "border-dashed")}>
       <CardHeader>
@@ -254,10 +265,12 @@ function LessonCard({
                 }}
               />
               <DeleteDialog
-                itemLabel="lesson"
+                item="lesson"
                 title={lesson.title}
-                description="All its sections and every student's progress in it are deleted too."
-                confirmText={`delete ${lesson.title}`}
+                description={t.deleteLessonDescription}
+                confirmText={fill(dictionary.deleteDialog.confirmPhrase, {
+                  title: lesson.title,
+                })}
                 onDelete={deleteLesson.bind(null, lesson.guid)}
               />
             </div>
@@ -269,7 +282,7 @@ function LessonCard({
         {lesson.sublessons.length > 0 ? (
           <SortableList
             items={lesson.sublessons}
-            label="sections"
+            saveError={t.reorderFailedSections}
             save={reorderSublessons.bind(null, lesson.guid)}
             className="flex flex-col"
           >
@@ -277,7 +290,7 @@ function LessonCard({
               <SortableItem
                 key={sublesson.guid}
                 id={sublesson.guid}
-                handleLabel="Drag to reorder section"
+                handleLabel={t.dragSection}
                 disabled={!editing}
               >
                 <SublessonRow
@@ -290,7 +303,7 @@ function LessonCard({
           </SortableList>
         ) : (
           <p className="px-2 py-1 text-sm text-muted-foreground">
-            No sections yet.
+            {t.noSections}
           </p>
         )}
       </div>
@@ -306,7 +319,7 @@ function LessonCard({
             })}
           >
             <Plus className="size-3.5" />
-            Add section
+            {t.addSection}
           </Link>
         </div>
       )}
@@ -321,11 +334,12 @@ function LessonCard({
  */
 export function LessonManager({ lessons }: { lessons: LessonMeta[] }) {
   const [editing, setEditing] = useState(false);
+  const t = useDictionary().lessons;
 
   return (
     <>
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Lessons</h1>
+        <h1 className="text-2xl font-semibold">{t.title}</h1>
         <div className="flex items-center gap-2">
           {editing && <LessonDialog />}
           <Button
@@ -339,17 +353,17 @@ export function LessonManager({ lessons }: { lessons: LessonMeta[] }) {
             ) : (
               <Pencil className="size-3.5" />
             )}
-            {editing ? "Done" : "Add & Edit"}
+            {editing ? t.done : t.addEdit}
           </Button>
         </div>
       </div>
 
       {lessons.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No lessons yet.</p>
+        <p className="text-sm text-muted-foreground">{t.none}</p>
       ) : (
         <SortableList
           items={lessons}
-          label="lessons"
+          saveError={t.reorderFailedLessons}
           save={reorderLessons}
           className="flex flex-col gap-4"
         >
@@ -357,7 +371,7 @@ export function LessonManager({ lessons }: { lessons: LessonMeta[] }) {
             <SortableItem
               key={lesson.guid}
               id={lesson.guid}
-              handleLabel="Drag to reorder lesson"
+              handleLabel={t.dragLesson}
               disabled={!editing}
               className="gap-2"
             >

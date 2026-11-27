@@ -5,8 +5,11 @@ import { getCurrentUser } from "@/lib/guards";
 import { getBlogPost } from "@/lib/blog";
 import { hasTeacherAccess } from "@/lib/utils";
 import { BlogPostEditor } from "@/components/blog/editor/blog-post-editor";
+import { getDictionary } from "@/lib/dictionary";
 
-export const metadata: Metadata = { title: "Edit blog post" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getDictionary()).blog.editTitle };
+}
 
 export default async function EditBlogPostPage({
   params,

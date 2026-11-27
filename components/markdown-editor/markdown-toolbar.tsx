@@ -35,6 +35,10 @@ import {
   replaceSelection,
   wrapSelection,
 } from "@/components/markdown-editor/markdown-editing";
+import { useDictionary } from "@/components/i18n-provider";
+import type { Dictionary } from "@/lib/dictionary";
+
+type ToolbarLabel = keyof Dictionary["markdownEditor"]["toolbar"];
 
 interface MarkdownToolbarProps {
   textareaRef: RefObject<HTMLTextAreaElement | null>;
@@ -44,7 +48,7 @@ interface MarkdownToolbarProps {
 }
 
 interface ToolbarAction {
-  label: string;
+  label: ToolbarLabel;
   icon: LucideIcon;
   run: (textarea: HTMLTextAreaElement) => void;
 }
@@ -52,37 +56,37 @@ interface ToolbarAction {
 const FORMAT_ACTIONS: ToolbarAction[][] = [
   [
     {
-      label: "Bold",
+      label: "bold",
       icon: Bold,
       run: (t) => wrapSelection(t, "**", "**", "tučně"),
     },
     {
-      label: "Italic",
+      label: "italic",
       icon: Italic,
       run: (t) => wrapSelection(t, "*", "*", "kurzíva"),
     },
     {
-      label: "Inline code",
+      label: "code",
       icon: Code,
       run: (t) => wrapSelection(t, "`", "`", "code"),
     },
   ],
   [
-    { label: "Heading", icon: Heading2, run: (t) => prefixLines(t, "## ") },
-    { label: "Subheading", icon: Heading3, run: (t) => prefixLines(t, "### ") },
+    { label: "heading", icon: Heading2, run: (t) => prefixLines(t, "## ") },
+    { label: "subheading", icon: Heading3, run: (t) => prefixLines(t, "### ") },
   ],
   [
-    { label: "Bulleted list", icon: List, run: (t) => prefixLines(t, "- ") },
+    { label: "bulletList", icon: List, run: (t) => prefixLines(t, "- ") },
     {
-      label: "Numbered list",
+      label: "numberedList",
       icon: ListOrdered,
       run: (t) => prefixLines(t, "1. "),
     },
-    { label: "Quote", icon: Quote, run: (t) => prefixLines(t, "> ") },
+    { label: "quote", icon: Quote, run: (t) => prefixLines(t, "> ") },
   ],
   [
     {
-      label: "Link",
+      label: "link",
       icon: Link2,
       run: (t) => {
         const selected = t.value.slice(t.selectionStart, t.selectionEnd);
@@ -103,6 +107,8 @@ export function MarkdownToolbar({
   onPickImage,
   children,
 }: MarkdownToolbarProps) {
+  const dictionary = useDictionary();
+  const t = dictionary.markdownEditor;
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [youtubeError, setYoutubeError] = useState<string | null>(null);
@@ -129,7 +135,7 @@ export function MarkdownToolbar({
     // still bubbles the submit through the component tree, which would save the post
     event.stopPropagation();
     if (!parseYoutubeUrl(youtubeUrl)) {
-      setYoutubeError("That doesn't look like a YouTube video link.");
+      setYoutubeError(t.youtube.invalid);
       return;
     }
     pendingYoutubeUrl.current = youtubeUrl.trim();
@@ -156,7 +162,7 @@ export function MarkdownToolbar({
           {group.map((action) => (
             <ToolbarButton
               key={action.label}
-              label={action.label}
+              label={t.toolbar[action.label]}
               icon={action.icon}
               onClick={() => run(action)}
             />
@@ -165,12 +171,12 @@ export function MarkdownToolbar({
       ))}
       <Separator orientation="vertical" className="mx-1 h-5 self-center" />
       <ToolbarButton
-        label="Upload image"
+        label={t.toolbar.image}
         icon={ImageIcon}
         onClick={onPickImage}
       />
       <ToolbarButton
-        label="YouTube video"
+        label={t.toolbar.youtube}
         icon={SquarePlay}
         onClick={() => openYoutube(true)}
       />
@@ -183,13 +189,8 @@ export function MarkdownToolbar({
       >
         <DialogContent finalFocus={textareaRef}>
           <DialogHeader>
-            <DialogTitle>Insert YouTube video</DialogTitle>
-            <DialogDescription>
-              The link is inserted on its own line and shows as a video
-              player. If you type or paste a YouTube link yourself, put an
-              empty line before and after it — otherwise it stays a plain
-              link.
-            </DialogDescription>
+            <DialogTitle>{t.youtube.title}</DialogTitle>
+            <DialogDescription>{t.youtube.description}</DialogDescription>
           </DialogHeader>
           <form className="flex flex-col gap-4" onSubmit={submitYoutube}>
             <div className="flex flex-col gap-2">
@@ -210,9 +211,9 @@ export function MarkdownToolbar({
             </div>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" />}>
-                Cancel
+                {dictionary.common.cancel}
               </DialogClose>
-              <Button type="submit">Insert</Button>
+              <Button type="submit">{t.youtube.insert}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

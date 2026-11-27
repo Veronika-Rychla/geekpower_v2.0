@@ -1,3 +1,5 @@
+"use client";
+
 import type { ContactMessage } from "@/lib/types";
 import { formatDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -5,6 +7,8 @@ import { deleteContactMessage } from "@/lib/actions";
 import { ClampedText } from "@/components/clamped-text";
 import { DeleteDialog } from "@/components/delete-dialog";
 import { ResolveButton } from "@/components/contact/resolve-button";
+import { useDictionary, useLocale } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 interface ContactMessageListProps {
   messages: ContactMessage[];
@@ -20,12 +24,15 @@ interface ContactMessageListProps {
 export function ContactMessageList({
   messages,
   canDelete = false,
-  emptyText = "No contact messages yet.",
+  emptyText,
   clamp = true,
   className,
 }: ContactMessageListProps) {
+  const t = useDictionary().contact;
+  const locale = useLocale();
+
   if (messages.length === 0) {
-    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
+    return <p className="text-sm text-muted-foreground">{emptyText ?? t.empty}</p>;
   }
 
   return (
@@ -39,7 +46,7 @@ export function ContactMessageList({
             <div className="flex min-w-0 flex-col items-start gap-0.5">
               {contact.resolved && (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                  Resolved
+                  {t.resolved}
                 </span>
               )}
               {clamp ? (
@@ -58,8 +65,8 @@ export function ContactMessageList({
               <ResolveButton guid={contact.guid} resolved={contact.resolved} />
               {canDelete && (
                 <DeleteDialog
-                  itemLabel="contact message"
-                  title={`Message from ${contact.name}`}
+                  item="contactMessage"
+                  title={fill(t.messageFrom, { name: contact.name })}
                   onDelete={deleteContactMessage.bind(null, contact.guid)}
                 />
               )}
@@ -73,7 +80,7 @@ export function ContactMessageList({
           ) : (
             <p className="whitespace-pre-wrap break-words text-muted-foreground">{contact.message}</p>
           )}
-          <p className="text-right text-xs text-muted-foreground">{formatDateTime(contact.createdAt)}</p>
+          <p className="text-right text-xs text-muted-foreground">{formatDateTime(contact.createdAt, locale)}</p>
         </li>
       ))}
     </ul>

@@ -18,6 +18,7 @@ import { insertBlock, replaceSelection } from "@/components/markdown-editor/mark
 import { QUIZ_BUILDERS, type QuizDraft } from "@/components/lessons/editor/quiz-builders";
 import { findQuizBlockAt, newQuizId, type QuizKind } from "@/lib/quizzes";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/i18n-provider";
 
 interface EditingQuiz {
   id: string;
@@ -34,6 +35,8 @@ const KINDS = Object.keys(QUIZ_BUILDERS) as QuizKind[];
  * saved answers stay attached); otherwise it inserts a new one at the caret.
  */
 export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTMLTextAreaElement | null> }) {
+  const dictionary = useDictionary();
+  const t = dictionary.quizBuilder;
   const [editing, setEditing] = useState<EditingQuiz | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Applied once the dialog has closed and focus is back in the textarea
@@ -62,7 +65,7 @@ export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTML
     if (!editing) return;
 
     const builder = QUIZ_BUILDERS[editing.draft.kind];
-    const problem = builder.validate(editing.draft);
+    const problem = builder.validate(editing.draft, t);
     if (problem) {
       setError(problem);
       return;
@@ -89,7 +92,7 @@ export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTML
 
   return (
     <>
-      <ToolbarButton label="Quiz (insert, or edit the one at the cursor)" icon={ListChecks} onClick={open} />
+      <ToolbarButton label={t.button} icon={ListChecks} onClick={open} />
 
       <Dialog
         open={editing !== null}
@@ -98,16 +101,14 @@ export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTML
       >
         <DialogContent finalFocus={textareaRef} className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing?.range ? "Edit quiz" : "Insert quiz"}</DialogTitle>
-            <DialogDescription>
-              Students must answer every quiz in a section correctly before they can finish it.
-            </DialogDescription>
+            <DialogTitle>{editing?.range ? t.editTitle : t.insertTitle}</DialogTitle>
+            <DialogDescription>{t.description}</DialogDescription>
           </DialogHeader>
 
           {editing && builder && (
             <form className="flex flex-col gap-4" onSubmit={submit}>
               {!editing.range && (
-                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Quiz type">
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t.kindLabel}>
                   {KINDS.map((kind) => (
                     <button
                       key={kind}
@@ -120,8 +121,8 @@ export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTML
                         editing.draft.kind === kind ? "border-primary bg-primary/10" : "border-input hover:bg-muted",
                       )}
                     >
-                      <span className="font-medium">{QUIZ_BUILDERS[kind].label}</span>
-                      <span className="text-xs text-muted-foreground">{QUIZ_BUILDERS[kind].description}</span>
+                      <span className="font-medium">{t.kinds[kind].label}</span>
+                      <span className="text-xs text-muted-foreground">{t.kinds[kind].description}</span>
                     </button>
                   ))}
                 </div>
@@ -139,8 +140,10 @@ export function QuizToolbarButton({ textareaRef }: { textareaRef: RefObject<HTML
               {error && <p className="text-sm text-destructive">{error}</p>}
 
               <DialogFooter>
-                <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
-                <Button type="submit">{editing.range ? "Update quiz" : "Insert quiz"}</Button>
+                <DialogClose render={<Button type="button" variant="outline" />}>
+                  {dictionary.common.cancel}
+                </DialogClose>
+                <Button type="submit">{editing.range ? t.update : t.insert}</Button>
               </DialogFooter>
             </form>
           )}

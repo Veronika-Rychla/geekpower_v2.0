@@ -26,6 +26,8 @@ import {
 import { createBlogPost, updateBlogPost } from "@/lib/actions";
 import { BLOG_POST_TYPES, type BlogPostType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 export interface BlogPostFields {
   title: string;
@@ -51,6 +53,9 @@ const EMPTY_POST: BlogPostFields = {
 
 export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
   const router = useRouter();
+  const dictionary = useDictionary();
+  const { common } = dictionary;
+  const t = dictionary.blog;
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
   const [mobileView, setMobileView] = useState<EditorView>("write");
@@ -81,7 +86,7 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
   async function onSubmit(data: BlogPostFields) {
     setFormError(null);
     if (uploadingCount > 0) {
-      setFormError("Wait until the images finish uploading.");
+      setFormError(common.waitForUploads);
       return;
     }
 
@@ -111,7 +116,7 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">
-          {guid ? "Edit blog post" : "New blog post"}
+          {guid ? t.editTitle : t.newTitle}
         </h1>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1.5 text-sm">
@@ -120,21 +125,21 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
               className="size-4 accent-primary"
               {...register("isDraft")}
             />
-            Draft
+            {common.draft}
           </label>
           <Link
             href={cancelHref}
             className={buttonVariants({ variant: "outline", size: "sm" })}
             onClick={(event) => {
-              if (isDirty && !window.confirm("Discard unsaved changes?")) {
+              if (isDirty && !window.confirm(common.discardChanges)) {
                 event.preventDefault();
               }
             }}
           >
-            Cancel
+            {common.cancel}
           </Link>
           <Button type="submit" size="sm" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save"}
+            {isSubmitting ? common.saving : common.save}
           </Button>
         </div>
       </div>
@@ -142,15 +147,15 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
       {formError && <p className="text-sm text-destructive">{formError}</p>}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+        <Label htmlFor={`${idPrefix}-title`}>{common.title}</Label>
         <Input
           id={`${idPrefix}-title`}
           aria-invalid={!!errors.title}
           {...register("title", {
-            validate: (value) => value.trim().length > 0 || "Title is required",
+            validate: (value) => value.trim().length > 0 || common.titleRequired,
             maxLength: {
               value: 200,
-              message: "Title must be at most 200 characters",
+              message: fill(common.titleTooLong, { max: 200 }),
             },
           })}
         />
@@ -160,18 +165,17 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${idPrefix}-summary`}>Summary</Label>
+        <Label htmlFor={`${idPrefix}-summary`}>{t.summary}</Label>
         <Textarea
           id={`${idPrefix}-summary`}
           rows={2}
           className="min-h-0"
           aria-invalid={!!errors.summary}
           {...register("summary", {
-            validate: (value) =>
-              value.trim().length > 0 || "Summary is required",
+            validate: (value) => value.trim().length > 0 || t.summaryRequired,
             maxLength: {
               value: 1000,
-              message: "Summary must be at most 1000 characters",
+              message: fill(t.summaryTooLong, { max: 1000 }),
             },
           })}
         />
@@ -181,11 +185,11 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="sr-only">Type</legend>
+        <legend className="sr-only">{t.type}</legend>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span aria-hidden className="text-sm leading-none font-medium">
-              Type
+              {t.type}
             </span>
             {BLOG_POST_TYPES.map((type) => (
               <label key={type} className="flex items-center gap-1.5 text-sm">
@@ -195,15 +199,15 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
                   className="size-4 accent-primary"
                   {...register("type", {
                     validate: (value) =>
-                      value.length > 0 || "Pick at least one type",
+                      value.length > 0 || t.typeRequired,
                   })}
                 />
-                {type}
+                {t.types[type]}
               </label>
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
-            ~{readTime} min read
+            {fill(t.estimatedRead, { minutes: readTime })}
           </span>
         </div>
         {errors.type && (
@@ -216,10 +220,10 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
       <div className="grid gap-4 lg:grid-cols-2">
         <MarkdownEditorPane
           id={`${idPrefix}-message`}
-          label="Message (Markdown)"
-          placeholder="Piš v Markdownu… Obrázky můžeš vložit (Ctrl+V) nebo přetáhnout sem."
+          label={t.message}
+          placeholder={t.messagePlaceholder}
           field={register("message", {
-            validate: (value) => value.trim().length > 0 || "Message is required",
+            validate: (value) => value.trim().length > 0 || t.messageRequired,
           })}
           textareaRef={textareaRef}
           getValue={() => getValues("message")}
@@ -228,7 +232,7 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
           }
           imageFolder="blog"
           onUploadingChange={setUploadingCount}
-          hint="Markdown · paste or drop images to upload"
+          hint={t.messageHint}
           isDirty={isDirty}
           invalid={!!errors.message}
           className={cn(mobileView !== "write" && "max-lg:hidden")}
@@ -239,7 +243,7 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
             "h-[70vh] min-h-96 overflow-y-auto rounded-md border border-input p-4 sm:p-6",
             mobileView !== "preview" && "max-lg:hidden",
           )}
-          aria-label="Preview"
+          aria-label={common.preview}
         >
           {previewMessage.trim() ? (
             <div className="prose prose-invert max-w-none">
@@ -247,7 +251,7 @@ export function BlogPostEditor({ guid, defaultValues }: BlogPostEditorProps) {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              The preview shows up here as you write.
+              {common.previewEmpty}
             </p>
           )}
         </div>

@@ -13,6 +13,7 @@ import { completeSublesson } from "@/lib/actions";
 import { createQuizCollector, lessonMdxOptions } from "@/lib/mdx/lesson-mdx";
 import { isResponseCorrect, type ChoiceQuizResponse } from "@/lib/quizzes";
 import { getInteractions, getLesson, getSublessonBody } from "@/lib/lessons";
+import { getDictionary } from "@/lib/dictionary";
 
 export default async function SublessonPage({
   params,
@@ -31,10 +32,12 @@ export default async function SublessonPage({
     notFound();
   }
 
-  const [source, interactions] = await Promise.all([
+  const [source, interactions, dictionary] = await Promise.all([
     getSublessonBody(sublesson.guid),
     getInteractions(user.guid, sublesson.guid),
+    getDictionary(),
   ]);
+  const t = dictionary.lessons;
   if (source === null) {
     notFound();
   }
@@ -79,13 +82,13 @@ export default async function SublessonPage({
     <article className="prose prose-invert w-full max-w-3xl px-4 py-10 sm:px-8 sm:py-16">
       {isTeacher && (
         <div className="not-prose mb-6 flex items-center justify-end gap-3">
-          {sublesson.isDraft && <span className="text-xs text-muted-foreground">Draft · hidden from students</span>}
+          {sublesson.isDraft && <span className="text-xs text-muted-foreground">{t.draftHidden}</span>}
           <Link
             href={`/lesson-editor/${sublesson.guid}`}
             className={buttonVariants({ variant: "outline", size: "sm", className: "gap-1.5" })}
           >
             <Pencil className="size-3.5" />
-            Edit section
+            {t.editSection}
           </Link>
         </div>
       )}
@@ -98,16 +101,16 @@ export default async function SublessonPage({
           {sublesson.completedAt ? (
             <Button type="submit" variant="outline" disabled className="gap-2">
               <CheckCircle2 className="size-4 text-primary" />
-              Section completed
+              {t.sectionCompleted}
             </Button>
           ) : (
             <>
               <Button type="submit" disabled={!allQuizzesCorrect}>
-                Finish section
+                {t.finishSection}
               </Button>
               {!allQuizzesCorrect && (
                 <p className="text-xs text-muted-foreground">
-                  Answer all quizzes above correctly to finish this section.
+                  {t.answerQuizzesFirst}
                 </p>
               )}
             </>

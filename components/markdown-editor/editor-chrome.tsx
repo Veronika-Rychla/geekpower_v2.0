@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useDictionary } from "@/components/i18n-provider";
 
 export type EditorView = "write" | "preview";
 
@@ -24,6 +25,8 @@ export function EditorViewTabs({
   view: EditorView;
   onChange: (view: EditorView) => void;
 }) {
+  const t = useDictionary().markdownEditor;
+
   return (
     <div className="flex gap-1 lg:hidden" role="tablist">
       {(["write", "preview"] as const).map((option) => (
@@ -36,7 +39,7 @@ export function EditorViewTabs({
           size="sm"
           onClick={() => onChange(option)}
         >
-          {option === "write" ? "Write" : "Preview"}
+          {option === "write" ? t.write : t.preview}
         </Button>
       ))}
     </div>

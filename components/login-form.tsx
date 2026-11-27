@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/components/i18n-provider";
 
 export type DevLogin = {
   label: string;
@@ -24,6 +25,8 @@ export type DevLogin = {
 
 export function LoginForm({ devLogins = [] }: { devLogins?: DevLogin[] }) {
   const router = useRouter();
+  const dictionary = useDictionary();
+  const t = dictionary.login;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function LoginForm({ devLogins = [] }: { devLogins?: DevLogin[] }) {
     });
 
     if (!result || result.error) {
-      setError("Invalid email or password");
+      setError(t.invalid);
       return;
     }
 
@@ -53,29 +56,29 @@ export function LoginForm({ devLogins = [] }: { devLogins?: DevLogin[] }) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your account to continue</CardDescription>
+        <CardTitle className="text-xl">{t.title}</CardTitle>
+        <CardDescription>{t.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{dictionary.common.email}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={dictionary.common.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.password}</Label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
-                Forgot password?
+                {t.forgotPassword}
               </Link>
             </div>
             <Input
@@ -88,7 +91,7 @@ export function LoginForm({ devLogins = [] }: { devLogins?: DevLogin[] }) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="mt-2 w-full">
-            Log in
+            {t.submit}
           </Button>
         </form>
         {devLogins.length > 0 && (

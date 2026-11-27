@@ -5,6 +5,7 @@ import { deleteBlogPost } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteDialog } from "@/components/delete-dialog";
+import { getDictionary } from "@/lib/dictionary";
 
 interface BlogPostActionsProps {
   guid: string;
@@ -15,24 +16,26 @@ interface BlogPostActionsProps {
 }
 
 /** Edit and delete buttons for one post. Render only for teachers/admins. */
-export function BlogPostActions({
+export async function BlogPostActions({
   guid,
   title,
   redirectAfterDelete = false,
   className,
 }: BlogPostActionsProps) {
+  const t = await getDictionary();
+
   return (
     <div className={cn("flex shrink-0 gap-1", className)}>
       <Link
         href={`/blog/${guid}/edit`}
-        aria-label="Edit blog post"
-        title="Edit"
+        aria-label={t.blog.editLabel}
+        title={t.common.edit}
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
       >
         <Pencil className="size-3.5" />
       </Link>
       <DeleteDialog
-        itemLabel="blog post"
+        item="blogPost"
         title={title}
         onDelete={deleteBlogPost.bind(null, guid, redirectAfterDelete)}
       />

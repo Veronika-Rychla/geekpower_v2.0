@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createAnnouncement, updateAnnouncement } from "@/lib/actions";
 import { ANNOUNCEMENT_TYPES, type AnnouncementType } from "@/lib/types";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 interface AnnouncementFields {
   type: AnnouncementType;
@@ -25,6 +27,9 @@ interface AnnouncementFormProps {
 }
 
 export function AnnouncementForm({ guid, defaultValues, onSuccess }: AnnouncementFormProps) {
+  const dictionary = useDictionary();
+  const { common } = dictionary;
+  const t = dictionary.announcements;
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -51,11 +56,11 @@ export function AnnouncementForm({ guid, defaultValues, onSuccess }: Announcemen
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{guid ? "Edit announcement" : "New announcement"}</DialogTitle>
+        <DialogTitle>{guid ? t.editTitle : t.newTitle}</DialogTitle>
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-type`}>Type</Label>
+          <Label htmlFor={`${idPrefix}-type`}>{t.type}</Label>
           <select
             id={`${idPrefix}-type`}
             className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
@@ -63,34 +68,34 @@ export function AnnouncementForm({ guid, defaultValues, onSuccess }: Announcemen
           >
             {ANNOUNCEMENT_TYPES.map((type) => (
               <option key={type} value={type} className="bg-popover text-popover-foreground">
-                {type}
+                {t.types[type]}
               </option>
             ))}
           </select>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+          <Label htmlFor={`${idPrefix}-title`}>{common.title}</Label>
           <Input
             id={`${idPrefix}-title`}
             aria-invalid={!!errors.title}
             {...register("title", {
-              validate: (value) => value.trim().length > 0 || "Title is required",
-              maxLength: { value: 200, message: "Title must be at most 200 characters" },
+              validate: (value) => value.trim().length > 0 || common.titleRequired,
+              maxLength: { value: 200, message: fill(common.titleTooLong, { max: 200 }) },
             })}
           />
           {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-body`}>Text</Label>
+          <Label htmlFor={`${idPrefix}-body`}>{t.text}</Label>
           <Textarea
             id={`${idPrefix}-body`}
             rows={6}
             className="max-h-80"
             aria-invalid={!!errors.body}
             {...register("body", {
-              validate: (value) => value.trim().length > 0 || "Text is required",
+              validate: (value) => value.trim().length > 0 || t.textRequired,
             })}
           />
           {errors.body && <p className="text-sm text-destructive">{errors.body.message}</p>}
@@ -99,9 +104,9 @@ export function AnnouncementForm({ guid, defaultValues, onSuccess }: Announcemen
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button type="button" variant="outline" />}>{common.cancel}</DialogClose>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : guid ? "Save changes" : "Publish"}
+            {isSubmitting ? common.saving : guid ? common.saveChanges : t.publish}
           </Button>
         </DialogFooter>
       </form>

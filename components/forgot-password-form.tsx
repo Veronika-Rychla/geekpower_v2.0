@@ -15,12 +15,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestPasswordReset } from "@/lib/actions";
+import { useDictionary } from "@/components/i18n-provider";
 
 interface ForgotPasswordFields {
   email: string;
 }
 
 export function ForgotPasswordForm() {
+  const dictionary = useDictionary();
+  const t = dictionary.forgotPassword;
   const [sent, setSent] = useState(false);
   const {
     register,
@@ -37,14 +40,12 @@ export function ForgotPasswordForm() {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-xl">Check your email</CardTitle>
-          <CardDescription>
-            If an account exists for that email, we&apos;ve sent a link to set a new password.
-          </CardDescription>
+          <CardTitle className="text-xl">{t.sentTitle}</CardTitle>
+          <CardDescription>{t.sentDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            ← Back to login
+            {t.backToLogin}
           </Link>
         </CardContent>
       </Card>
@@ -54,32 +55,32 @@ export function ForgotPasswordForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Forgot password?</CardTitle>
-        <CardDescription>Enter your email and we&apos;ll send you a link to set a new one.</CardDescription>
+        <CardTitle className="text-xl">{t.title}</CardTitle>
+        <CardDescription>{t.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{dictionary.common.email}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={dictionary.common.emailPlaceholder}
               aria-invalid={!!errors.email}
-              {...register("email", { required: "Email is required" })}
+              {...register("email", { required: t.emailRequired })}
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
 
           <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Sending…" : "Send reset link"}
+            {isSubmitting ? t.sending : t.submit}
           </Button>
 
           <Link
             href="/"
             className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            ← Back to login
+            {t.backToLogin}
           </Link>
         </form>
       </CardContent>

@@ -19,6 +19,8 @@ import {
 } from "@/components/markdown-editor/upload-image";
 import type { ImageFolder } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 interface MarkdownEditorPaneProps {
   id: string;
@@ -72,6 +74,7 @@ export function MarkdownEditorPane({
   toolbarExtras,
   className,
 }: MarkdownEditorPaneProps) {
+  const t = useDictionary().markdownEditor;
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -120,7 +123,7 @@ export function MarkdownEditorPane({
 
     const images = files.filter(isUploadableImage);
     if (images.length < files.length) {
-      setUploadError("Only JPEG, PNG, WebP and GIF images can be uploaded.");
+      setUploadError(t.onlyImages);
     } else {
       setUploadError(null);
     }
@@ -138,11 +141,11 @@ export function MarkdownEditorPane({
       jobs.map(async ({ file, alt, placeholder }) => {
         let replacement = "";
         try {
-          const url = await uploadImage(file, imageFolder);
+          const url = await uploadImage(file, imageFolder, t);
           replacement = `![${alt}](${url})`;
         } catch (error) {
           setUploadError(
-            `${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`,
+            `${file.name}: ${error instanceof Error ? error.message : t.uploadFailed}`,
           );
         }
         replacePlaceholder(placeholder, replacement);
@@ -207,11 +210,11 @@ export function MarkdownEditorPane({
         ) : (
           <span>
             {uploadingCount > 0
-              ? `Uploading ${uploadingCount} image${uploadingCount > 1 ? "s" : ""}…`
+              ? fill(t.uploading, { count: uploadingCount })
               : hint}
           </span>
         )}
-        {isDirty && <span>Unsaved changes ●</span>}
+        {isDirty && <span>{t.unsaved}</span>}
       </div>
 
       <input

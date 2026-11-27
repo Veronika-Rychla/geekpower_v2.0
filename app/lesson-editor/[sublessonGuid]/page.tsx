@@ -5,8 +5,11 @@ import { getCurrentUser } from "@/lib/guards";
 import { getEditableSublesson, getSublessonVersions } from "@/lib/lessons";
 import { hasTeacherAccess, isGuid } from "@/lib/utils";
 import { SublessonEditor } from "@/components/lessons/editor/sublesson-editor";
+import { getDictionary } from "@/lib/dictionary";
 
-export const metadata: Metadata = { title: "Edit section" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getDictionary()).editor.editSection };
+}
 
 export default async function EditSublessonPage({ params }: PageProps<"/lesson-editor/[sublessonGuid]">) {
   const user = await getCurrentUser();

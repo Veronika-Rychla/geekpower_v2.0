@@ -8,12 +8,15 @@ import { z } from "zod";
 
 import { sql } from "@/app/database";
 import {
+  getCurrentUser,
   requireAdmin,
   requireTeacher,
   requireUser,
   type CurrentUser,
 } from "@/lib/guards";
 import { sendSetPasswordEmail } from "@/lib/email";
+import { getDictionary, getLocale, type Dictionary } from "@/lib/dictionary";
+import { fill, hasLocale, type Locale } from "@/lib/i18n";
 import { getUserByEmail } from "@/lib/data";
 import {
   getAccessibleSublesson,
@@ -48,79 +51,101 @@ const SUBLESSON_VERSIONS_KEPT = 10;
 
 // Action arguments come straight from the client, so TypeScript types alone guarantee nothing.
 const guidSchema = z.string().min(1).max(64);
-const lessonSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required.")
-    .max(
-      CONTENT_TITLE_MAX_LENGTH,
-      `Title must be at most ${CONTENT_TITLE_MAX_LENGTH} characters.`,
-    ),
-  slug: z
-    .string()
-    .trim()
-    .min(1, "Name in URL is required.")
-    .max(SLUG_MAX_LENGTH, `Name in URL must be at most ${SLUG_MAX_LENGTH} characters.`)
-    .regex(
-      SLUG_PATTERN,
-      "Name in URL may contain only lowercase letters, digits and single dashes.",
-    ),
-  isDraft: z.boolean(),
-});
-const sublessonSchema = lessonSchema.extend({
-  body: z
-    .string()
-    .trim()
-    .min(1, "Content is required.")
-    .max(
-      SUBLESSON_BODY_MAX_LENGTH,
-      `Content must be at most ${SUBLESSON_BODY_MAX_LENGTH} characters.`,
-    ),
-});
+
+/*
+ * The schemas take the request's error messages (messages/*.json `errors`),
+ * so a form shows server-side validation errors in the user's language.
+ */
+type ErrorMessages = Dictionary["errors"];
+
+function lessonSchema(e: ErrorMessages) {
+  return z.object({
+    title: z
+      .string()
+      .trim()
+      .min(1, e.titleRequired)
+      .max(
+        CONTENT_TITLE_MAX_LENGTH,
+        fill(e.titleTooLong, { max: CONTENT_TITLE_MAX_LENGTH }),
+      ),
+    slug: z
+      .string()
+      .trim()
+      .min(1, e.slugRequired)
+      .max(SLUG_MAX_LENGTH, fill(e.slugTooLong, { max: SLUG_MAX_LENGTH }))
+      .regex(SLUG_PATTERN, e.slugPattern),
+    isDraft: z.boolean(),
+  });
+}
+
+function sublessonSchema(e: ErrorMessages) {
+  return lessonSchema(e).extend({
+    body: z
+      .string()
+      .trim()
+      .min(1, e.contentRequired)
+      .max(
+        SUBLESSON_BODY_MAX_LENGTH,
+        fill(e.contentTooLong, { max: SUBLESSON_BODY_MAX_LENGTH }),
+      ),
+  });
+}
 
 type LessonInput = { title: string; slug: string; isDraft: boolean };
 type SublessonInput = LessonInput & { body: string };
 
-const userSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required.").max(100),
-  lastName: z.string().trim().min(1, "Last name is required.").max(100),
-  email: z.email("Enter a valid email address.").trim().max(254),
-  status: z.enum(["Active", "Inactive"]),
-});
-const announcementSchema = z.object({
-  type: z.enum(ANNOUNCEMENT_TYPES),
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required.")
-    .max(
-      ANNOUNCEMENT_TITLE_MAX_LENGTH,
-      `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
-    ),
-  body: z.string().trim().min(1, "Text is required.").max(10_000),
-});
-const blogPostSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required.")
-    .max(
-      ANNOUNCEMENT_TITLE_MAX_LENGTH,
-      `Title must be at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
-    ),
-  summary: z
-    .string()
-    .trim()
-    .min(1, "Summary is required.")
-    .max(1_000, "Summary must be at most 1000 characters."),
-  message: z.string().trim().min(1, "Message is required.").max(100_000),
-  type: z
-    .array(z.enum(BLOG_POST_TYPES))
-    .min(1, "Pick at least one type.")
-    .transform((types) => [...new Set(types)]),
-  isDraft: z.boolean(),
-});
+function userSchema(e: ErrorMessages) {
+  return z.object({
+    firstName: z.string().trim().min(1, e.firstNameRequired).max(100),
+    lastName: z.string().trim().min(1, e.lastNameRequired).max(100),
+    email: z.email(e.emailInvalid).trim().max(254),
+    status: z.enum(["Active", "Inactive"]),
+  });
+}
+
+function announcementSchema(e: ErrorMessages) {
+  return z.object({
+    type: z.enum(ANNOUNCEMENT_TYPES),
+    title: z
+      .string()
+      .trim()
+      .min(1, e.titleRequired)
+      .max(
+        ANNOUNCEMENT_TITLE_MAX_LENGTH,
+        fill(e.titleTooLong, { max: ANNOUNCEMENT_TITLE_MAX_LENGTH }),
+      ),
+    body: z.string().trim().min(1, e.textRequired).max(10_000),
+  });
+}
+
+function blogPostSchema(e: ErrorMessages) {
+  return z.object({
+    title: z
+      .string()
+      .trim()
+      .min(1, e.titleRequired)
+      .max(
+        ANNOUNCEMENT_TITLE_MAX_LENGTH,
+        fill(e.titleTooLong, { max: ANNOUNCEMENT_TITLE_MAX_LENGTH }),
+      ),
+    summary: z
+      .string()
+      .trim()
+      .min(1, e.summaryRequired)
+      .max(1_000, fill(e.summaryTooLong, { max: 1_000 })),
+    message: z.string().trim().min(1, e.messageRequired).max(100_000),
+    type: z
+      .array(z.enum(BLOG_POST_TYPES))
+      .min(1, e.typeRequired)
+      .transform((types) => [...new Set(types)]),
+    isDraft: z.boolean(),
+  });
+}
+
+/** The current request's error messages. */
+async function errorMessages(): Promise<ErrorMessages> {
+  return (await getDictionary()).errors;
+}
 
 type BlogPostInput = {
   title: string;
@@ -182,9 +207,7 @@ export async function completeSublesson(sublessonGuidInput: string) {
         isResponseCorrect(interactions[quiz.id]?.response),
       )
     ) {
-      throw new Error(
-        "Answer all quizzes correctly before finishing this section",
-      );
+      throw new Error((await errorMessages()).quizzesFirst);
     }
   }
 
@@ -306,7 +329,8 @@ function isUniqueViolation(error: unknown): boolean {
 
 export async function createLesson(input: LessonInput): Promise<ContentResult> {
   await requireTeacher();
-  const parsed = parseForForm(lessonSchema, input);
+  const e = await errorMessages();
+  const parsed = parseForForm(lessonSchema(e), input);
   if ("error" in parsed) return parsed;
   const { title, slug, isDraft } = parsed.data;
 
@@ -316,8 +340,7 @@ export async function createLesson(input: LessonInput): Promise<ContentResult> {
       VALUES (${slug}, ${title}, ${isDraft}, (SELECT COALESCE(MAX(position), 0) + 1 FROM content.lessons))
     `;
   } catch (error) {
-    if (isUniqueViolation(error))
-      return { error: "Another lesson already uses this name in URL." };
+    if (isUniqueViolation(error)) return { error: e.lessonSlugTaken };
     throw error;
   }
 
@@ -331,7 +354,8 @@ export async function updateLesson(
 ): Promise<ContentResult> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
-  const parsed = parseForForm(lessonSchema, input);
+  const e = await errorMessages();
+  const parsed = parseForForm(lessonSchema(e), input);
   if ("error" in parsed) return parsed;
   const { title, slug, isDraft } = parsed.data;
 
@@ -344,8 +368,7 @@ export async function updateLesson(
     `;
     if (updated.length === 0) throw new Error("Not found");
   } catch (error) {
-    if (isUniqueViolation(error))
-      return { error: "Another lesson already uses this name in URL." };
+    if (isUniqueViolation(error)) return { error: e.lessonSlugTaken };
     throw error;
   }
 
@@ -376,20 +399,26 @@ export async function previewSublesson(
     sourceInput,
   );
 
-  const result = await compileLessonSource(source);
+  const result = await compileLessonSource(
+    source,
+    (await getDictionary()).mdx,
+  );
   return "error" in result ? result : { compiledSource: result.compiledSource };
 }
 
 /** Like `parseForForm`, then also requires the body to compile. */
 async function parseSublessonInput(
   input: unknown,
-): Promise<{ error: string } | { data: z.infer<typeof sublessonSchema> }> {
-  const parsed = parseForForm(sublessonSchema, input);
+  dictionary: Dictionary,
+): Promise<
+  { error: string } | { data: z.infer<ReturnType<typeof sublessonSchema>> }
+> {
+  const parsed = parseForForm(sublessonSchema(dictionary.errors), input);
   if ("error" in parsed) return parsed;
-  const compiled = await compileLessonSource(parsed.data.body);
+  const compiled = await compileLessonSource(parsed.data.body, dictionary.mdx);
   if ("error" in compiled) {
     return {
-      error: `The content has an error, so it can't be saved:\n${compiled.error}`,
+      error: fill(dictionary.errors.contentInvalid, { error: compiled.error }),
     };
   }
   return parsed;
@@ -401,7 +430,8 @@ export async function createSublesson(
 ): Promise<ContentResult> {
   const teacher = await requireTeacher();
   const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
-  const parsed = await parseSublessonInput(input);
+  const dictionary = await getDictionary();
+  const parsed = await parseSublessonInput(input, dictionary);
   if ("error" in parsed) return parsed;
   const { title, slug, isDraft, body } = parsed.data;
 
@@ -420,9 +450,7 @@ export async function createSublesson(
     lessonSlug = row.lesson_slug as string;
   } catch (error) {
     if (isUniqueViolation(error))
-      return {
-        error: "Another section of this lesson already uses this name in URL.",
-      };
+      return { error: dictionary.errors.sectionSlugTaken };
     throw error;
   }
 
@@ -441,7 +469,8 @@ export async function updateSublesson(
 ): Promise<ContentResult> {
   const teacher = await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
-  const parsed = await parseSublessonInput(input);
+  const dictionary = await getDictionary();
+  const parsed = await parseSublessonInput(input, dictionary);
   if ("error" in parsed) return parsed;
   const { title, slug, isDraft, body } = parsed.data;
 
@@ -478,9 +507,7 @@ export async function updateSublesson(
     lessonSlug = row.lesson_slug as string;
   } catch (error) {
     if (isUniqueViolation(error))
-      return {
-        error: "Another section of this lesson already uses this name in URL.",
-      };
+      return { error: dictionary.errors.sectionSlugTaken };
     throw error;
   }
 
@@ -515,9 +542,6 @@ export async function deleteSublesson(
 }
 
 type ReorderResult = { error: string } | { success: true };
-
-const REORDER_CONFLICT =
-  "The lessons changed in the meantime. Reload the page and try again.";
 
 /** Distinct guids in their new display order. */
 const orderSchema = z
@@ -554,7 +578,7 @@ export async function reorderLessons(
       current.map((row) => row.guid as string),
     )
   )
-    return { error: REORDER_CONFLICT };
+    return { error: (await errorMessages()).reorderConflict };
 
   await sql.transaction([
     sql`UPDATE content.lessons SET position = position + (SELECT MAX(position) FROM content.lessons)`,
@@ -587,7 +611,7 @@ export async function reorderSublessons(
       current.map((row) => row.guid as string),
     )
   )
-    return { error: REORDER_CONFLICT };
+    return { error: (await errorMessages()).reorderConflict };
 
   await sql.transaction([
     sql`
@@ -614,13 +638,14 @@ export async function createStudent(input: {
   status: "Active" | "Inactive";
 }): Promise<{ error: string } | { guid: string }> {
   await requireTeacher();
-  const parsed = parseForForm(userSchema, input);
+  const e = await errorMessages();
+  const parsed = parseForForm(userSchema(e), input);
   if ("error" in parsed) return parsed;
   const data = parsed.data;
 
   const existing = await getUserByEmail(data.email);
   if (existing) {
-    return { error: "A user with this email already exists." };
+    return { error: e.emailTaken };
   }
 
   const guid = randomUUID();
@@ -632,7 +657,13 @@ export async function createStudent(input: {
 
   const token = await createPasswordResetToken(guid);
   try {
-    await sendSetPasswordEmail(data.email, data.firstName, token);
+    // The student hasn't picked a language yet, so write in the one the teacher uses.
+    await sendSetPasswordEmail(
+      data.email,
+      data.firstName,
+      token,
+      await getLocale(),
+    );
   } catch (error) {
     // Don't fail student creation over a flaky/unconfigured email provider — the
     // student record and a valid token both exist; log the link so it can be
@@ -656,7 +687,12 @@ export async function requestPasswordReset(
   if (user) {
     const token = await createPasswordResetToken(user.guid);
     try {
-      await sendSetPasswordEmail(user.email, user.first_name, token);
+      await sendSetPasswordEmail(
+        user.email,
+        user.first_name,
+        token,
+        user.locale ?? (await getLocale()),
+      );
     } catch (error) {
       console.error(
         `Failed to send password reset email to ${user.email}:`,
@@ -678,7 +714,9 @@ export async function setPassword(
       .string()
       .min(
         PASSWORD_MIN_LENGTH,
-        `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+        fill((await errorMessages()).passwordTooShort, {
+          min: PASSWORD_MIN_LENGTH,
+        }),
       )
       .max(200),
     passwordInput,
@@ -692,7 +730,7 @@ export async function setPassword(
     RETURNING user_guid
   `;
   if (!row) {
-    return { error: "This link is invalid or has expired. Request a new one." };
+    return { error: (await errorMessages()).linkExpired };
   }
 
   const passwordHash = await bcrypt.hash(password.data, 10);
@@ -712,13 +750,14 @@ export async function updateUser(
 ): Promise<{ error: string } | { success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
-  const parsed = parseForForm(userSchema, input);
+  const e = await errorMessages();
+  const parsed = parseForForm(userSchema(e), input);
   if ("error" in parsed) return parsed;
   const data = parsed.data;
 
   const existing = await getUserByEmail(data.email);
   if (existing && existing.guid !== guid) {
-    return { error: "A user with this email already exists." };
+    return { error: e.emailTaken };
   }
 
   // Only students: otherwise a teacher could point an admin's email at
@@ -743,7 +782,7 @@ export async function createAnnouncement(input: {
   body: string;
 }): Promise<{ error: string } | { success: true }> {
   const teacher = await requireTeacher();
-  const parsed = parseForForm(announcementSchema, input);
+  const parsed = parseForForm(announcementSchema(await errorMessages()), input);
   if ("error" in parsed) return parsed;
 
   await sql`
@@ -761,7 +800,7 @@ export async function updateAnnouncement(
 ): Promise<{ error: string } | { success: true }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
-  const parsed = parseForForm(announcementSchema, input);
+  const parsed = parseForForm(announcementSchema(await errorMessages()), input);
   if ("error" in parsed) return parsed;
 
   await sql`
@@ -790,7 +829,7 @@ export async function createBlogPost(
   input: BlogPostInput,
 ): Promise<{ error: string } | { success: true; guid: string }> {
   const teacher = await requireTeacher();
-  const parsed = parseForForm(blogPostSchema, input);
+  const parsed = parseForForm(blogPostSchema(await errorMessages()), input);
   if ("error" in parsed) return parsed;
   const { title, summary, message, type, isDraft } = parsed.data;
 
@@ -812,7 +851,7 @@ export async function updateBlogPost(
 ): Promise<{ error: string } | { success: true; guid: string }> {
   await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
-  const parsed = parseForForm(blogPostSchema, input);
+  const parsed = parseForForm(blogPostSchema(await errorMessages()), input);
   if ("error" in parsed) return parsed;
   const { title, summary, message, type, isDraft } = parsed.data;
 
@@ -840,7 +879,7 @@ export async function createImageUpload(
     console.error(
       "Cloudinary env vars are not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)",
     );
-    return { error: "Image upload is not configured." };
+    return { error: (await errorMessages()).uploadNotConfigured };
   }
   return upload;
 }
@@ -876,6 +915,22 @@ export async function setContactMessageResolved(
 
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+/**
+ * Saves the language picked in the user menu for the signed-in user, so it
+ * follows them to other devices and into their emails. The browser has already
+ * written the shared `lang` cookie; revalidating re-renders the page in it.
+ */
+export async function saveLocale(localeInput: Locale): Promise<void> {
+  if (!hasLocale(localeInput)) {
+    throw new Error("Invalid input");
+  }
+  const user = await getCurrentUser();
+  if (user) {
+    await sql`UPDATE users SET locale = ${localeInput} WHERE guid = ${user.guid}`;
+  }
+  revalidatePath("/", "layout");
 }
 
 export async function deleteContactMessage(

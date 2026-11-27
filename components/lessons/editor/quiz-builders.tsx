@@ -15,11 +15,14 @@ import {
   optionId,
   type QuizKind,
 } from "@/lib/quizzes";
+import { useDictionary } from "@/components/i18n-provider";
+import type { Dictionary } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 
 /*
  * The quiz builder's form for each quiz kind. To add a kind, add its draft
- * shape to `QuizDraft` and an entry to `QUIZ_BUILDERS` (see lib/quizzes.ts for
- * the rest of the list).
+ * shape to `QuizDraft`, an entry to `QUIZ_BUILDERS`, and its name and messages
+ * to messages/*.json `quizBuilder` (see lib/quizzes.ts for the rest of the list).
  */
 
 export interface ChoiceQuizDraft {
@@ -39,20 +42,16 @@ export interface QuizFormProps<D extends QuizDraft = QuizDraft> {
 }
 
 export interface QuizBuilder<D extends QuizDraft = QuizDraft> {
-  label: string;
-  description: string;
   empty: () => D;
   /** Reads an existing quiz block back into a draft, or null if it can't. */
   fromMdx: (block: string) => D | null;
   toMdx: (draft: D, id: string) => string;
-  /** A message for the first problem, or null when the draft can be inserted. */
-  validate: (draft: D) => string | null;
+  /** A message (in `t`'s language) for the first problem, or null when the draft can be inserted. */
+  validate: (draft: D, t: Dictionary["quizBuilder"]) => string | null;
   Form: ComponentType<QuizFormProps<D>>;
 }
 
 const choiceBuilder: QuizBuilder<ChoiceQuizDraft> = {
-  label: "Multiple choice",
-  description: "One question, one correct answer.",
   empty: () => ({ kind: "choice", question: "", options: ["", "", ""], correctIndex: -1 }),
   fromMdx: (block) => {
     const quiz = choiceQuizFromMdx(block);
@@ -74,11 +73,11 @@ const choiceBuilder: QuizBuilder<ChoiceQuizDraft> = {
       correctId: optionId(draft.correctIndex),
     });
   },
-  validate: (draft) => {
-    if (!draft.question.trim()) return "Write the question.";
-    if (draft.options.length < CHOICE_MIN_OPTIONS) return `Add at least ${CHOICE_MIN_OPTIONS} options.`;
-    if (draft.options.some((option) => !option.trim())) return "Fill in every option, or remove the empty ones.";
-    if (draft.correctIndex < 0 || draft.correctIndex >= draft.options.length) return "Mark the correct answer.";
+  validate: (draft, { choice: t }) => {
+    if (!draft.question.trim()) return t.needQuestion;
+    if (draft.options.length < CHOICE_MIN_OPTIONS) return fill(t.needOptions, { min: CHOICE_MIN_OPTIONS });
+    if (draft.options.some((option) => !option.trim())) return t.emptyOption;
+    if (draft.correctIndex < 0 || draft.correctIndex >= draft.options.length) return t.needCorrect;
     return null;
   },
   Form: ChoiceQuizForm,
@@ -89,6 +88,9 @@ export const QUIZ_BUILDERS: Record<QuizKind, QuizBuilder> = {
 };
 
 function ChoiceQuizForm({ idPrefix, draft, onChange }: QuizFormProps<ChoiceQuizDraft>) {
+  const builderText = useDictionary().quizBuilder;
+  const t = builderText.choice;
+
   function setOption(index: number, text: string) {
     onChange({ ...draft, options: draft.options.map((option, i) => (i === index ? text : option)) });
   }
@@ -102,7 +104,7 @@ function ChoiceQuizForm({ idPrefix, draft, onChange }: QuizFormProps<ChoiceQuizD
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${idPrefix}-question`}>Question</Label>
+        <Label htmlFor={`${idPrefix}-question`}>{t.question}</Label>
         <Textarea
           id={`${idPrefix}-question`}
           rows={2}
@@ -114,20 +116,22 @@ function ChoiceQuizForm({ idPrefix, draft, onChange }: QuizFormProps<ChoiceQuizD
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">Options · pick the correct one</legend>
-        {draft.options.map((option, index) => (
+        <legend className="mb-2 text-sm font-medium">{t.options}</legend>
+        {draft.options.map((option, index) => {
+          const id = optionId(index).toUpperCase();
+          return (
           <div key={index} className="flex items-center gap-2">
             <input
               type="radio"
               name={`${idPrefix}-correct`}
               className="size-4 shrink-0 accent-primary"
-              aria-label={`Option ${optionId(index).toUpperCase()} is correct`}
+              aria-label={fill(t.optionCorrect, { id })}
               checked={draft.correctIndex === index}
               onChange={() => onChange({ ...draft, correctIndex: index })}
             />
             <Input
-              aria-label={`Option ${optionId(index).toUpperCase()}`}
-              placeholder={`Option ${optionId(index).toUpperCase()}`}
+              aria-label={fill(t.option, { id })}
+              placeholder={fill(t.option, { id })}
               value={option}
               onChange={(event) => setOption(index, event.target.value)}
             />
@@ -135,14 +139,15 @@ function ChoiceQuizForm({ idPrefix, draft, onChange }: QuizFormProps<ChoiceQuizD
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={`Remove option ${optionId(index).toUpperCase()}`}
+              aria-label={fill(t.removeOption, { id })}
               disabled={draft.options.length <= CHOICE_MIN_OPTIONS}
               onClick={() => removeOption(index)}
             >
               <X className="size-3.5" />
             </Button>
           </div>
-        ))}
+          );
+        })}
         <Button
           type="button"
           variant="outline"
@@ -152,12 +157,12 @@ function ChoiceQuizForm({ idPrefix, draft, onChange }: QuizFormProps<ChoiceQuizD
           onClick={() => onChange({ ...draft, options: [...draft.options, ""] })}
         >
           <Plus className="size-3.5" />
-          Add option
+          {t.addOption}
         </Button>
       </fieldset>
 
       <p className="text-xs text-muted-foreground">
-        The question and options can use Markdown, e.g. **bold** or `code`.
+        {builderText.markdownHint}
       </p>
     </div>
   );

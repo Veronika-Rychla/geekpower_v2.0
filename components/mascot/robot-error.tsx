@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { MascotArt } from "@/components/mascot/mascot-art";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 interface RobotErrorProps {
   error: Error & { digest?: string };
@@ -12,6 +14,7 @@ interface RobotErrorProps {
 
 /** Error screen: the robot short-circuits, sweats, and offers to try again. */
 export function RobotError({ error, retry }: RobotErrorProps) {
+  const t = useDictionary().robot;
   const [isPending, startTransition] = useTransition();
   const [eyes, setEyes] = useState({ left: { x: 0, y: 0 }, right: { x: 0, y: 0 } });
 
@@ -34,15 +37,14 @@ export function RobotError({ error, retry }: RobotErrorProps) {
         <MascotArt variant="wild" staring sweating eyes={eyes} />
       </div>
       <div className="flex max-w-md flex-col gap-2">
-        <h1 className="text-xl font-semibold">Oops, I tripped over a cable.</h1>
-        <p className="text-sm text-muted-foreground">
-          Something went wrong while loading this page. Often the database just needs a moment to wake up, so try
-          again.
-        </p>
-        {error.digest && <p className="font-mono text-xs text-muted-foreground">Error code: {error.digest}</p>}
+        <h1 className="text-xl font-semibold">{t.errorTitle}</h1>
+        <p className="text-sm text-muted-foreground">{t.errorBody}</p>
+        {error.digest && (
+          <p className="font-mono text-xs text-muted-foreground">{fill(t.errorCode, { digest: error.digest })}</p>
+        )}
       </div>
       <Button disabled={isPending} onClick={() => startTransition(() => retry())}>
-        {isPending ? "Plugging the cable back in…" : "Try again"}
+        {isPending ? t.retrying : t.retry}
       </Button>
     </div>
   );

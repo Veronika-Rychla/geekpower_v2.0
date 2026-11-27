@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDateTime } from "@/lib/dates";
 import type { SavedStamp, SublessonVersionSummary } from "@/lib/lessons";
+import { useDictionary, useLocale } from "@/components/i18n-provider";
 
 interface VersionHistoryMenuProps {
   current: SavedStamp;
@@ -34,6 +35,8 @@ export function VersionHistoryMenu({
   onSelectCurrent,
   onSelectVersion,
 }: VersionHistoryMenuProps) {
+  const t = useDictionary().editor;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -47,15 +50,15 @@ export function VersionHistoryMenu({
         }
       >
         <History />
-        History
+        {t.history}
         <ChevronDown />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-72">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Saved versions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t.savedVersions}</DropdownMenuLabel>
           <VersionItem
             stamp={current}
-            label="Current"
+            label={t.current}
             selected={loadedGuid === null}
             onClick={onSelectCurrent}
           />
@@ -64,8 +67,7 @@ export function VersionHistoryMenu({
         <DropdownMenuGroup>
           {versions.length === 0 ? (
             <p className="px-2 py-1.5 text-sm text-muted-foreground">
-              No earlier versions yet. Each save keeps the previous one (up to
-              10).
+              {t.noVersions}
             </p>
           ) : (
             versions.map((version) => (
@@ -94,16 +96,19 @@ function VersionItem({
   selected: boolean;
   onClick: () => void;
 }) {
+  const t = useDictionary().editor;
+  const locale = useLocale();
+
   return (
     <DropdownMenuItem onClick={onClick}>
       <Check className={selected ? undefined : "invisible"} />
       <span className="flex min-w-0 flex-col">
         <span>
-          {formatDateTime(stamp.savedAt)}
+          {formatDateTime(stamp.savedAt, locale)}
           {label && <span className="text-muted-foreground"> · {label}</span>}
         </span>
         <span className="truncate text-xs text-muted-foreground">
-          {stamp.savedBy ?? "Unknown author"}
+          {stamp.savedBy ?? t.unknownAuthor}
         </span>
       </span>
     </DropdownMenuItem>

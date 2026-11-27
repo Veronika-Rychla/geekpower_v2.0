@@ -1,5 +1,7 @@
 // DB types
 
+import type { Locale } from "@/lib/i18n";
+
 export type Role = "Admin" | "Teacher" | "User";
 
 // public.users
@@ -11,6 +13,7 @@ export interface User {
   role: Role;
   status: "Active" | "Inactive";
   password_hash: string | null;
+  locale: Locale | null; // CHECK (locale IN ('cs', 'en')); null until the user picks a language
 }
 
 // content.lessons

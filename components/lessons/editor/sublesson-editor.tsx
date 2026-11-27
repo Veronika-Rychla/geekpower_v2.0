@@ -23,6 +23,8 @@ import { formatDateTime } from "@/lib/dates";
 import type { SavedStamp, SublessonVersionSummary } from "@/lib/lessons";
 import { slugify } from "@/lib/slug";
 import { cn } from "@/lib/utils";
+import { useDictionary, useLocale } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 export interface SublessonFields {
   title: string;
@@ -42,6 +44,10 @@ interface SublessonEditorProps {
 /** Full-page editor for one lesson section: MDX on the left, live preview on the right. */
 export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorProps) {
   const router = useRouter();
+  const dictionary = useDictionary();
+  const { common } = dictionary;
+  const t = dictionary.editor;
+  const locale = useLocale();
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
   const [mobileView, setMobileView] = useState<EditorView>("write");
@@ -79,7 +85,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
   async function onSubmit(data: SublessonFields) {
     setFormError(null);
     if (uploadingCount > 0) {
-      setFormError("Wait until the images finish uploading.");
+      setFormError(common.waitForUploads);
       return;
     }
 
@@ -93,7 +99,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
   }
 
   async function loadVersion(version: SublessonVersionSummary) {
-    if (isDirty && !window.confirm("Replace your unsaved changes with this version?")) {
+    if (isDirty && !window.confirm(t.replaceWithVersion)) {
       return;
     }
     setFormError(null);
@@ -101,7 +107,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
     const content = await getSublessonVersion(version.guid);
     setIsLoadingVersion(false);
     if (!content) {
-      setFormError("This version no longer exists.");
+      setFormError(t.versionGone);
       return;
     }
     // Start from the saved section so other unsaved edits (name in URL, draft) don't linger
@@ -112,7 +118,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
   }
 
   function loadCurrent() {
-    if (isDirty && !window.confirm("Discard unsaved changes?")) {
+    if (isDirty && !window.confirm(common.discardChanges)) {
       return;
     }
     setFormError(null);
@@ -136,7 +142,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground">{lesson.title}</p>
-          <h1 className="text-xl font-semibold">{sublesson ? "Edit section" : "New section"}</h1>
+          <h1 className="text-xl font-semibold">{sublesson ? t.editSection : t.newSection}</h1>
         </div>
         <div className="flex items-center gap-3">
           {history && (
@@ -151,30 +157,32 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
           )}
           <label className="flex items-center gap-1.5 text-sm">
             <input type="checkbox" className="size-4 accent-primary" {...register("isDraft")} />
-            Draft
+            {common.draft}
           </label>
           <Link
             href={cancelHref}
             className={buttonVariants({ variant: "outline", size: "sm" })}
             onClick={(event) => {
-              if (isDirty && !window.confirm("Discard unsaved changes?")) {
+              if (isDirty && !window.confirm(common.discardChanges)) {
                 event.preventDefault();
               }
             }}
           >
-            Cancel
+            {common.cancel}
           </Link>
           <Button type="submit" size="sm" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save"}
+            {isSubmitting ? common.saving : common.save}
           </Button>
         </div>
       </div>
 
       {loadedVersion && (
         <p className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm">
-          Showing the version from {formatDateTime(loadedVersion.savedAt)}
-          {loadedVersion.savedBy && ` by ${loadedVersion.savedBy}`}. Save to restore it. The current content will
-          stay in History.
+          {fill(loadedVersion.savedBy ? t.showingVersionBy : t.showingVersion, {
+            date: formatDateTime(loadedVersion.savedAt, locale),
+            name: loadedVersion.savedBy ?? "",
+          })}{" "}
+          {t.restoreHint}
         </p>
       )}
 
@@ -186,13 +194,13 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+          <Label htmlFor={`${idPrefix}-title`}>{common.title}</Label>
           <Input
             id={`${idPrefix}-title`}
             aria-invalid={!!errors.title}
             {...register("title", {
-              validate: (value) => value.trim().length > 0 || "Title is required",
-              maxLength: { value: 200, message: "Title must be at most 200 characters" },
+              validate: (value) => value.trim().length > 0 || common.titleRequired,
+              maxLength: { value: 200, message: fill(common.titleTooLong, { max: 200 }) },
               onChange: (event) => {
                 // A new section's slug follows the title until it's edited by hand
                 if (!sublesson && !slugEdited) {
@@ -204,7 +212,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
           {errors.title ? (
             <p className="text-sm text-destructive">{errors.title.message}</p>
           ) : (
-            <p className="text-xs text-muted-foreground">Shown in the lesson menu.</p>
+            <p className="text-xs text-muted-foreground">{t.titleHint}</p>
           )}
         </div>
         <SlugField
@@ -213,7 +221,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
           kind="section"
           warnOnChange={!!sublesson}
           {...register("slug", {
-            ...slugRules,
+            ...slugRules(dictionary.lessons.slug),
             // Clearing it lets it follow the title again, like in the lesson dialog
             onChange: (event) => {
               setSlugEdited(event.target.value !== "");
@@ -227,17 +235,17 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
       <div className="grid gap-4 lg:grid-cols-2">
         <MarkdownEditorPane
           id={`${idPrefix}-body`}
-          label="Content (MDX)"
-          placeholder="Piš v Markdownu… Kvíz vložíš tlačítkem v liště, obrázky přes Ctrl+V nebo přetažením."
+          label={t.content}
+          placeholder={t.contentPlaceholder}
           field={register("body", {
-            validate: (value) => value.trim().length > 0 || "Content is required",
+            validate: (value) => value.trim().length > 0 || t.contentRequired,
           })}
           textareaRef={textareaRef}
           getValue={() => getValues("body")}
           setValue={(value) => setValue("body", value, { shouldDirty: true })}
           imageFolder="lessons"
           onUploadingChange={setUploadingCount}
-          hint={"MDX · write \\{ and \\} for literal braces · Ctrl+S saves"}
+          hint={t.contentHint}
           isDirty={isDirty}
           invalid={!!errors.body}
           toolbarExtras={<QuizToolbarButton textareaRef={textareaRef} />}
@@ -249,7 +257,7 @@ export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorP
             "h-[70vh] min-h-96 overflow-y-auto rounded-md border border-input p-4 sm:p-6",
             mobileView !== "preview" && "max-lg:hidden",
           )}
-          aria-label="Preview"
+          aria-label={common.preview}
         >
           <LessonPreview source={previewBody} />
         </div>

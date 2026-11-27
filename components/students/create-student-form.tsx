@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/components/i18n-provider";
 import { createStudent } from "@/lib/actions";
 
 interface CreateStudentFields {
@@ -19,6 +20,9 @@ interface CreateStudentFields {
 
 export function CreateStudentForm() {
   const router = useRouter();
+  const dictionary = useDictionary();
+  const { common } = dictionary;
+  const t = dictionary.students;
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -41,58 +45,58 @@ export function CreateStudentForm() {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Create student</DialogTitle>
+        <DialogTitle>{t.create}</DialogTitle>
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">{t.firstName}</Label>
           <Input
             id="firstName"
-            placeholder="Jane"
+            placeholder={t.firstNamePlaceholder}
             aria-invalid={!!errors.firstName}
-            {...register("firstName", { required: "First name is required" })}
+            {...register("firstName", { required: t.firstNameRequired })}
           />
           {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">{t.lastName}</Label>
           <Input
             id="lastName"
-            placeholder="Smith"
+            placeholder={t.lastNamePlaceholder}
             aria-invalid={!!errors.lastName}
-            {...register("lastName", { required: "Last name is required" })}
+            {...register("lastName", { required: t.lastNameRequired })}
           />
           {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{common.email}</Label>
           <Input
             id="email"
             type="email"
-            placeholder="jane@example.com"
+            placeholder={t.emailPlaceholder}
             aria-invalid={!!errors.email}
             {...register("email", {
-              required: "Email is required",
-              pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email address" },
+              required: t.emailRequired,
+              pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: t.emailInvalid },
             })}
           />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="status">{t.status}</Label>
           <select
             id="status"
             className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
             {...register("status", { required: true })}
           >
             <option value="Active" className="bg-popover text-popover-foreground">
-              Active
+              {t.statuses.Active}
             </option>
             <option value="Inactive" className="bg-popover text-popover-foreground">
-              Inactive
+              {t.statuses.Inactive}
             </option>
           </select>
         </div>
@@ -100,9 +104,9 @@ export function CreateStudentForm() {
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button type="button" variant="outline" />}>{common.cancel}</DialogClose>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating…" : "Create student"}
+            {isSubmitting ? t.creating : t.create}
           </Button>
         </DialogFooter>
       </form>

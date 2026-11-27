@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
+import { getDictionary, getLocale } from "@/lib/dictionary";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -26,13 +27,17 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const session = await auth();
+  const [session, locale, dictionary] = await Promise.all([
+    auth(),
+    getLocale(),
+    getDictionary(),
+  ]);
 
   return (
     // suppressHydrationWarning: the inline script below sets a saved color
     // theme on <html> (and drops `dark` for a light one).
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={cn(
         "dark",
@@ -49,7 +54,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <Providers session={session}>
+        <Providers session={session} locale={locale} dictionary={dictionary}>
           <SiteHeader />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />

@@ -5,10 +5,12 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 import { useNavLinks } from "@/components/site-nav";
+import { useDictionary } from "@/components/i18n-provider";
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
   const links = useNavLinks();
+  const t = useDictionary().nav;
 
   if (!links) {
     return null;
@@ -20,7 +22,7 @@ export function MobileMenu() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="text-muted-foreground transition-colors hover:text-foreground sm:hidden"
-        aria-label="Toggle navigation menu"
+        aria-label={t.toggleMenu}
         aria-expanded={open}
       >
         {open ? <X className="size-5" /> : <Menu className="size-5" />}

@@ -5,13 +5,19 @@ import { hasTeacherAccess } from "@/lib/utils";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LessonManager } from "@/components/lessons/manage/lesson-manager";
 import { getLessons } from "@/lib/lessons";
+import { getDictionary } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 
 export default async function LessonsPage() {
   const user = await getCurrentUser();
   if (!user) {
     return null;
   }
-  const lessons = await getLessons(user);
+  const [lessons, dictionary] = await Promise.all([
+    getLessons(user),
+    getDictionary(),
+  ]);
+  const t = dictionary.lessons;
 
   if (hasTeacherAccess(user.role)) {
     return (
@@ -23,7 +29,7 @@ export default async function LessonsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Lessons</h1>
+      <h1 className="text-2xl font-semibold">{t.title}</h1>
       <div className="flex flex-col gap-4">
         {lessons.map((lesson) => {
           const completedCount = lesson.sublessons.filter((s) => s.completedAt).length;
@@ -34,7 +40,10 @@ export default async function LessonsPage() {
                 <CardHeader>
                   <CardTitle>{lesson.displayTitle}</CardTitle>
                   <CardDescription>
-                    {completedCount} / {lesson.sublessons.length} completed
+                    {fill(t.completed, {
+                      done: completedCount,
+                      total: lesson.sublessons.length,
+                    })}
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -43,7 +52,7 @@ export default async function LessonsPage() {
         })}
         {lessons.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No lessons unlocked yet — ask your teacher for access.
+            {t.noneUnlocked}
           </p>
         )}
       </div>

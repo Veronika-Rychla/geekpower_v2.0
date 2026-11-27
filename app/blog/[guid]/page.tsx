@@ -6,6 +6,8 @@ import { cache } from "react";
 import { getCurrentUser } from "@/lib/guards";
 import { getBlogPost } from "@/lib/blog";
 import { formatDateTime } from "@/lib/dates";
+import { getDictionary, getLocale } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 import { hasTeacherAccess } from "@/lib/utils";
 import { BlogPostActions } from "@/components/blog/blog-post-actions";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
@@ -21,7 +23,10 @@ export async function generateMetadata({
   params,
 }: PageProps<"/blog/[guid]">): Promise<Metadata> {
   const post = await loadPost((await params).guid);
-  return { title: post?.title ?? "Blog", description: post?.summary };
+  return {
+    title: post?.title ?? (await getDictionary()).blog.title,
+    description: post?.summary,
+  };
 }
 
 export default async function BlogPostPage({
@@ -32,6 +37,10 @@ export default async function BlogPostPage({
     notFound();
   }
   const canManage = hasTeacherAccess((await getCurrentUser())?.role);
+  const [{ blog: t, common }, locale] = await Promise.all([
+    getDictionary(),
+    getLocale(),
+  ]);
 
   return (
     <article className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
@@ -39,7 +48,7 @@ export default async function BlogPostPage({
         href="/blog"
         className="text-xs text-muted-foreground hover:text-foreground"
       >
-        ← Blog
+        {t.back}
       </Link>
       <div className="flex items-start justify-between gap-2">
         <BlogPostBadges post={post} />
@@ -54,8 +63,9 @@ export default async function BlogPostPage({
       </div>
       <h1 className="text-3xl font-semibold">{post.title}</h1>
       <p className="text-sm text-muted-foreground">
-        {post.authorName} · {formatDateTime(post.createdAt)}
-        {post.updatedAt && " (edited)"} · {post.readTime} min read
+        {post.authorName} · {formatDateTime(post.createdAt, locale)}
+        {post.updatedAt && common.edited} ·{" "}
+        {fill(common.minRead, { minutes: post.readTime })}
       </p>
       <p className="text-lg whitespace-pre-wrap text-muted-foreground">
         {post.summary}

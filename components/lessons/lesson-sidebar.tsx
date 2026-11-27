@@ -7,6 +7,7 @@ import { CheckCircle2, ChevronDown, Circle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { SublessonMeta } from "@/lib/lessons";
+import { useDictionary } from "@/components/i18n-provider";
 
 interface LessonSidebarProps {
   lessonSlug: string;
@@ -18,6 +19,8 @@ interface LessonSidebarProps {
 export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgress }: LessonSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const dictionary = useDictionary();
+  const t = dictionary.lessons;
 
   const activeSublesson = sublessons.find(
     (sublesson) => pathname === `/lessons/${lessonSlug}/${sublesson.slug}`,
@@ -29,7 +32,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
         href="/lessons"
         className="mb-4 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        ← All lessons
+        {t.allLessons}
       </Link>
       <h2 className="mb-2 px-2 text-sm font-semibold">{lessonTitle}</h2>
     </>
@@ -60,7 +63,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
                 <Circle className="size-3.5 shrink-0" />
               ))}
             <span className={cn("truncate", sublesson.isDraft && "italic")}>{sublesson.displayTitle}</span>
-            {sublesson.isDraft && <span className="ml-auto shrink-0 text-xs text-muted-foreground">Draft</span>}
+            {sublesson.isDraft && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{dictionary.common.draft}</span>}
           </Link>
         );
       })}
@@ -76,7 +79,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
             href="/lessons"
             className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            ← All lessons
+            {t.allLessons}
           </Link>
         </div>
 
@@ -86,7 +89,7 @@ export function LessonSidebar({ lessonSlug, lessonTitle, sublessons, showProgres
           className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium"
           aria-expanded={open}
         >
-          <span className="truncate">{activeSublesson?.displayTitle ?? "Sections"}</span>
+          <span className="truncate">{activeSublesson?.displayTitle ?? t.sections}</span>
           <ChevronDown className={cn("size-4 shrink-0 transition-transform", open && "rotate-180")} />
         </button>
 

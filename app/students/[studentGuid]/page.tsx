@@ -15,6 +15,8 @@ import {
 import { EditStudentDialog } from "@/components/students/edit-student-dialog";
 import { unlockLesson } from "@/lib/actions";
 import { getStudentDetail } from "@/lib/lessons";
+import { getDictionary, getLocale } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 
 export default async function StudentDetailPage({
   params,
@@ -32,6 +34,8 @@ export default async function StudentDetailPage({
   }
 
   const { student, lessons } = detail;
+  const [dictionary, locale] = await Promise.all([getDictionary(), getLocale()]);
+  const t = dictionary.students;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
@@ -40,13 +44,13 @@ export default async function StudentDetailPage({
           href="/students"
           className="text-xs text-muted-foreground hover:text-foreground"
         >
-          ← All students
+          {t.allStudents}
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">{student.firstName} {student.lastName}</h1>
             <p className="text-sm text-muted-foreground">
-              {student.email} · {student.status}
+              {student.email} · {t.statuses[student.status]}
             </p>
           </div>
           <EditStudentDialog
@@ -79,7 +83,7 @@ export default async function StudentDetailPage({
                       )}
                     >
                       <Button type="submit" size="sm" variant="outline">
-                        Unlock
+                        {t.unlock}
                       </Button>
                     </form>
                   )}
@@ -87,18 +91,21 @@ export default async function StudentDetailPage({
                 <CardDescription>
                   {lesson.unlocked ? (
                     <>
-                      {completedCount} / {lesson.sublessons.length} sections
-                      completed
+                      {fill(t.sectionsCompleted, {
+                        done: completedCount,
+                        total: lesson.sublessons.length,
+                      })}
                       {lesson.unlockedAt && (
                         <span className="text-xs text-muted-foreground">
-                          {" "}
-                          · Unlocked {formatDateTime(lesson.unlockedAt)}
+                          {fill(t.unlockedAt, {
+                            date: formatDateTime(lesson.unlockedAt, locale),
+                          })}
                         </span>
                       )}
                     </>
                   ) : (
                     <span className="flex items-center gap-1.5">
-                      <Lock className="size-3.5" /> Locked
+                      <Lock className="size-3.5" /> {t.locked}
                     </span>
                   )}
                 </CardDescription>
@@ -124,7 +131,7 @@ export default async function StudentDetailPage({
                       </span>
                       {sublesson.completedAt && (
                         <span className="text-xs text-muted-foreground">
-                          · {formatDateTime(sublesson.completedAt)}
+                          · {formatDateTime(sublesson.completedAt, locale)}
                         </span>
                       )}
                     </div>

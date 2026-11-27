@@ -12,11 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDictionary } from "@/components/i18n-provider";
+import { LanguageButton, LanguageSubmenu } from "@/components/language-switch";
 import { ThemePicker, ThemePickerButton } from "@/components/theme-picker";
 
 /** The signed-in user's name, opening a menu with their settings and log out. */
 export function UserMenu() {
   const { data: session } = useSession();
+  const t = useDictionary().userMenu;
   const trigger = useRef<HTMLButtonElement>(null);
   const [themeOpen, setThemeOpen] = useState(false);
   // "Colors" opens the picker once the menu has finished closing, so the
@@ -24,7 +27,12 @@ export function UserMenu() {
   const themeRequested = useRef(false);
 
   if (!session?.user) {
-    return <ThemePickerButton />;
+    return (
+      <div className="flex items-center gap-1">
+        <LanguageButton />
+        <ThemePickerButton />
+      </div>
+    );
   }
 
   return (
@@ -44,7 +52,7 @@ export function UserMenu() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground"
-              aria-label="User menu"
+              aria-label={t.label}
             />
           }
         >
@@ -57,15 +65,16 @@ export function UserMenu() {
         <DropdownMenuContent align="end" sideOffset={8} className="w-48">
           <DropdownMenuItem onClick={() => (themeRequested.current = true)}>
             <Palette />
-            Colors
+            {t.colors}
           </DropdownMenuItem>
+          <LanguageSubmenu />
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onClick={() => signOut({ callbackUrl: "/" })}
           >
             <LogOut />
-            Log out
+            {t.logOut}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

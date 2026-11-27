@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createLesson, updateLesson } from "@/lib/actions";
 import { SLUG_MAX_LENGTH, SLUG_PATTERN, slugify } from "@/lib/slug";
+import { useDictionary } from "@/components/i18n-provider";
+import type { Dictionary } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 
 interface LessonFields {
   title: string;
@@ -34,17 +37,20 @@ interface LessonDialogProps {
 /** Create or edit a lesson's title, name in URL (slug) and draft state. Its sections are edited separately. */
 export function LessonDialog({ lesson }: LessonDialogProps) {
   const [open, setOpen] = useState(false);
+  const t = useDictionary().lessons;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {lesson ? (
-        <DialogTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Edit lesson" title="Edit lesson" />}>
+        <DialogTrigger
+          render={<Button variant="ghost" size="icon-sm" aria-label={t.editLesson} title={t.editLesson} />}
+        >
           <Pencil className="size-3.5" />
         </DialogTrigger>
       ) : (
         <DialogTrigger render={<Button size="sm" />}>
           <Plus className="size-3.5" />
-          New lesson
+          {t.newLesson}
         </DialogTrigger>
       )}
       <DialogContent>
@@ -56,6 +62,9 @@ export function LessonDialog({ lesson }: LessonDialogProps) {
 }
 
 function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () => void }) {
+  const dictionary = useDictionary();
+  const { common } = dictionary;
+  const t = dictionary.lessons;
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -82,22 +91,18 @@ function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () =
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{lesson ? "Edit lesson" : "New lesson"}</DialogTitle>
-        {!lesson && (
-          <DialogDescription>
-            New lessons start as drafts. Add sections to it, then untick Draft to show it to students.
-          </DialogDescription>
-        )}
+        <DialogTitle>{lesson ? t.editLesson : t.newLesson}</DialogTitle>
+        {!lesson && <DialogDescription>{t.newLessonDescription}</DialogDescription>}
       </DialogHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+          <Label htmlFor={`${idPrefix}-title`}>{common.title}</Label>
           <Input
             id={`${idPrefix}-title`}
             aria-invalid={!!errors.title}
             {...register("title", {
-              validate: (value) => value.trim().length > 0 || "Title is required",
-              maxLength: { value: 200, message: "Title must be at most 200 characters" },
+              validate: (value) => value.trim().length > 0 || common.titleRequired,
+              maxLength: { value: 200, message: fill(common.titleTooLong, { max: 200 }) },
               onChange: (event) => {
                 // A new lesson's slug follows the title until it's edited by hand
                 if (!lesson && !getFieldState("slug").isDirty) {
@@ -114,20 +119,20 @@ function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () =
           error={errors.slug?.message}
           kind="lesson"
           warnOnChange={!!lesson}
-          {...register("slug", slugRules)}
+          {...register("slug", slugRules(t.slug))}
         />
 
         <label className="flex items-center gap-1.5 text-sm">
           <input type="checkbox" className="size-4 accent-primary" {...register("isDraft")} />
-          Draft (hidden from students)
+          {t.draftHiddenCheckbox}
         </label>
 
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button type="button" variant="outline" />}>{common.cancel}</DialogClose>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : lesson ? "Save changes" : "Create lesson"}
+            {isSubmitting ? common.saving : lesson ? common.saveChanges : t.createLesson}
           </Button>
         </DialogFooter>
       </form>
@@ -135,11 +140,14 @@ function LessonForm({ lesson, onSuccess }: LessonDialogProps & { onSuccess: () =
   );
 }
 
-export const slugRules = {
-  validate: (value: string) => value.trim().length > 0 || "Name in URL is required",
-  maxLength: { value: SLUG_MAX_LENGTH, message: `Name in URL must be at most ${SLUG_MAX_LENGTH} characters` },
-  pattern: { value: SLUG_PATTERN, message: "Use lowercase letters, digits and single dashes only" },
-};
+/** Validation for the slug input, in the given language (`lessons.slug`). */
+export function slugRules(t: Dictionary["lessons"]["slug"]) {
+  return {
+    validate: (value: string) => value.trim().length > 0 || t.required,
+    maxLength: { value: SLUG_MAX_LENGTH, message: fill(t.tooLong, { max: SLUG_MAX_LENGTH }) },
+    pattern: { value: SLUG_PATTERN, message: t.pattern },
+  };
+}
 
 /** The URL slug input ("Name in URL"), shared by the lesson dialog and the section editor. */
 export function SlugField({
@@ -154,17 +162,19 @@ export function SlugField({
   warnOnChange?: boolean;
   kind: "lesson" | "section";
 }) {
+  const t = useDictionary().lessons.slug;
+
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>Name in URL</Label>
+      <Label htmlFor={id}>{t.label}</Label>
       <Input id={id} aria-invalid={!!error} className="font-mono" {...props} />
       {error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          The name this {kind} appears as in the page&apos;s web address (URL). Lowercase letters, digits and dashes
-          only, e.g. <span className="font-mono">{kind === "lesson" ? "it-basics" : "new-words"}</span>.
-          {warnOnChange && " Changing it changes the address, so old links stop working."}
+          {kind === "lesson" ? t.hintLesson : t.hintSection}{" "}
+          <span className="font-mono">{kind === "lesson" ? t.exampleLesson : t.exampleSection}</span>.
+          {warnOnChange && ` ${t.warnOnChange}`}
         </p>
       )}
     </div>

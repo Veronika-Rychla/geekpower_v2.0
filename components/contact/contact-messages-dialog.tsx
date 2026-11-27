@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { ContactMessageList } from "@/components/contact/contact-message-list";
 import type { ContactMessage } from "@/lib/types";
+import { useDictionary } from "@/components/i18n-provider";
+import { fill } from "@/lib/i18n";
 
 interface ContactMessagesDialogProps {
   /** Every message, resolved and unresolved. */
@@ -19,18 +21,19 @@ interface ContactMessagesDialogProps {
 }
 
 export function ContactMessagesDialog({ messages, canDelete = false }: ContactMessagesDialogProps) {
+  const t = useDictionary().contact;
   const unresolvedCount = messages.filter((m) => !m.resolved).length;
   // Unresolved first. The DB returns newest first and sort() is stable, so that order holds within each group.
   const sorted = messages.toSorted((a, b) => Number(a.resolved) - Number(b.resolved));
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button size="sm" variant="outline" />}>Show all</DialogTrigger>
+      <DialogTrigger render={<Button size="sm" variant="outline" />}>{t.showAll}</DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>All contact messages</DialogTitle>
+          <DialogTitle>{t.allTitle}</DialogTitle>
           <DialogDescription>
-            {messages.length} total, {unresolvedCount} unresolved
+            {fill(t.summary, { total: messages.length, unresolved: unresolvedCount })}
           </DialogDescription>
         </DialogHeader>
         <ContactMessageList

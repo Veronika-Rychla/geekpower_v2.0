@@ -5,18 +5,7 @@ import { Loader2 } from "lucide-react";
 
 import { MascotArt } from "@/components/mascot/mascot-art";
 import { cn } from "@/lib/utils";
-
-const MESSAGES = [
-  "Polishing my glasses…",
-  "Asking the server nicely…",
-  "Untangling irregular verbs…",
-  "Counting to ten in binary… 1010!",
-  "Warming up my vocabulary…",
-  "Brewing coffee for the database ☕",
-  "Mind the gap… loading the present continuous",
-  "Debugging my own sense of humour…",
-  "Feeding the hamsters that power the server 🐹",
-];
+import { useDictionary } from "@/components/i18n-provider";
 
 /** Fast loads only ever see a plain spinner; the robot comes out for slower ones. */
 const ROBOT_AFTER_MS = 500;
@@ -35,6 +24,9 @@ interface RobotLoaderProps {
  * after ROBOT_AFTER_MS, the robot doing a little show with rotating jokes.
  */
 export function RobotLoader({ size = "page", className }: RobotLoaderProps) {
+  const dictionary = useDictionary();
+  const t = dictionary.robot;
+  const messages = t.messages;
   const [showRobot, setShowRobot] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
   const [slow, setSlow] = useState(false);
@@ -51,9 +43,9 @@ export function RobotLoader({ size = "page", className }: RobotLoaderProps) {
   // Jokes rotate only once the robot is out, so the first one gets its full time
   useEffect(() => {
     if (!showRobot) return;
-    const rotate = setInterval(() => setMessageIndex((index) => (index + 1) % MESSAGES.length), MESSAGE_EVERY_MS);
+    const rotate = setInterval(() => setMessageIndex((index) => (index + 1) % messages.length), MESSAGE_EVERY_MS);
     return () => clearInterval(rotate);
-  }, [showRobot]);
+  }, [showRobot, messages.length]);
 
   if (!showRobot) {
     return (
@@ -66,7 +58,7 @@ export function RobotLoader({ size = "page", className }: RobotLoaderProps) {
         )}
       >
         <Loader2 aria-hidden className="size-6 animate-spin text-muted-foreground" />
-        <span className="sr-only">Loading</span>
+        <span className="sr-only">{dictionary.common.loading}</span>
       </div>
     );
   }
@@ -97,15 +89,13 @@ export function RobotLoader({ size = "page", className }: RobotLoaderProps) {
 
       <div className="flex min-h-12 flex-col items-center gap-1">
         <p key={messageIndex} className="robot-message text-sm font-medium text-foreground">
-          {MESSAGES[messageIndex]}
+          {messages[messageIndex % messages.length]}
         </p>
         {slow && (
-          <p className="robot-message text-xs text-muted-foreground">
-            The database is still waking up. It&apos;s a deep sleeper 😴 Almost there…
-          </p>
+          <p className="robot-message text-xs text-muted-foreground">{t.slow}</p>
         )}
       </div>
-      <span className="sr-only">Loading</span>
+      <span className="sr-only">{dictionary.common.loading}</span>
     </div>
   );
 }

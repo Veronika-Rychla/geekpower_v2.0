@@ -16,10 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDictionary } from "@/components/i18n-provider";
+import type { Dictionary } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
+
+/** What can be deleted; each has its own wording in messages/*.json `deleteDialog.items`. */
+export type DeleteItem = keyof Dictionary["deleteDialog"]["items"];
 
 interface DeleteDialogProps {
-  /** What is being deleted, e.g. "announcement" or "blog post". */
-  itemLabel: string;
+  /** What is being deleted. */
+  item: DeleteItem;
   /** The item's title, quoted in the confirmation text. */
   title: string;
   /** Server action with the item's id already bound, e.g. `deleteBlogPost.bind(null, guid)`. */
@@ -27,7 +33,8 @@ interface DeleteDialogProps {
   /** Extra consequences to spell out, e.g. lost student progress. */
   description?: string;
   /**
-   * When set, Delete stays disabled until this phrase is typed, e.g. `delete ${title}`.
+   * When set, Delete stays disabled until this phrase is typed, e.g. `delete ${title}`
+   * (`deleteDialog.confirmPhrase`).
    * Emoji and repeated spaces don't have to be typed (see `normalizeConfirmText`).
    */
   confirmText?: string;
@@ -42,7 +49,7 @@ function normalizeConfirmText(text: string): string {
 }
 
 export function DeleteDialog({
-  itemLabel,
+  item,
   title,
   onDelete,
   description,
@@ -52,6 +59,8 @@ export function DeleteDialog({
   const [typed, setTyped] = useState("");
   const [isPending, startTransition] = useTransition();
   const confirmInputId = useId();
+  const t = useDictionary();
+  const labels = t.deleteDialog.items[item];
 
   const phrase =
     confirmText === undefined ? null : normalizeConfirmText(confirmText);
@@ -74,21 +83,16 @@ export function DeleteDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Delete ${itemLabel}`}
-          />
+          <Button variant="ghost" size="icon-sm" aria-label={labels.button} />
         }
       >
         <Trash2 className="size-3.5" />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete this {itemLabel}?</DialogTitle>
+          <DialogTitle>{labels.title}</DialogTitle>
           <DialogDescription>
-            &ldquo;{title}&rdquo; will be removed for everyone. This can&apos;t
-            be undone.
+            {fill(t.deleteDialog.body, { title })}
             {description && <> {description}</>}
           </DialogDescription>
         </DialogHeader>
@@ -98,7 +102,7 @@ export function DeleteDialog({
               htmlFor={confirmInputId}
               className="block cursor-text leading-normal font-normal select-text"
             >
-              To confirm, type{" "}
+              {t.deleteDialog.typeToConfirm}{" "}
               <code className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.9em] font-semibold text-foreground">
                 {phrase}
               </code>
@@ -118,7 +122,7 @@ export function DeleteDialog({
         )}
         <DialogFooter>
           <DialogClose render={<Button type="button" variant="outline" />}>
-            Cancel
+            {t.common.cancel}
           </DialogClose>
           <Button
             type="button"
@@ -126,7 +130,7 @@ export function DeleteDialog({
             disabled={isPending || !confirmed}
             onClick={handleDelete}
           >
-            {isPending ? "Deleting…" : "Delete"}
+            {isPending ? t.deleteDialog.deleting : t.deleteDialog.delete}
           </Button>
         </DialogFooter>
       </DialogContent>

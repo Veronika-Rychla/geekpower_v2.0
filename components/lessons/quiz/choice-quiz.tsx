@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import type { RenderedChoiceOption } from "@/components/lessons/quiz/quiz-parts";
 import { answerQuiz } from "@/lib/actions";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/i18n-provider";
 
 interface ChoiceQuizProps {
   sublessonGuid: string;
@@ -28,6 +29,7 @@ export function ChoiceQuiz({
   initialSelectedId,
   initialCorrect,
 }: ChoiceQuizProps) {
+  const t = useDictionary().quiz;
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
   // null until graded
   const [correct, setCorrect] = useState<boolean | null>(initialSelectedId ? (initialCorrect ?? false) : null);
@@ -44,7 +46,7 @@ export function ChoiceQuiz({
         const result = await answerQuiz(sublessonGuid, quizId, selectedId);
         setCorrect(result.correct);
       } catch {
-        setError("Your answer couldn't be saved. Try again.");
+        setError(t.saveFailed);
       }
     });
   }
@@ -95,18 +97,18 @@ export function ChoiceQuiz({
               correct ? "text-green-600 dark:text-green-400" : "text-destructive",
             )}
           >
-            {correct ? "Correct! 🎉" : "Not quite — try again."}
+            {correct ? t.correct : t.incorrect}
           </p>
           {!correct && (
             <Button type="button" variant="outline" size="sm" onClick={handleRedo}>
-              Redo
+              {t.redo}
             </Button>
           )}
         </div>
       ) : (
         <div className="flex flex-col items-start gap-2">
           <Button type="button" disabled={!selectedId || isPending} onClick={handleCheck}>
-            {isPending ? "Checking…" : "Check answer"}
+            {isPending ? t.checking : t.check}
           </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>

@@ -2,30 +2,39 @@
  * Date helpers. After the DB layer, dates travel through the app as ISO 8601 strings
  * (serializable across the server/client boundary). Format and compare them only here.
  *
- * Formatting pins the locale and time zone so server and client render identical text
- * (no hydration mismatch, no UTC times on the server).
+ * Formatting takes the UI locale (lib/i18n.ts) and pins the time zone, so server and
+ * client render identical text (no hydration mismatch, no UTC times on the server).
  */
 
-const LOCALE = "cs-CZ";
+import { localeTags, type Locale } from "@/lib/i18n";
+
 const TIME_ZONE = "Europe/Prague";
 
-const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, {
-  timeZone: TIME_ZONE,
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
+function makeFormatters(tag: string) {
+  return {
+    dateTime: new Intl.DateTimeFormat(tag, {
+      timeZone: TIME_ZONE,
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+    date: new Intl.DateTimeFormat(tag, {
+      timeZone: TIME_ZONE,
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    }),
+  };
+}
 
-const dateFormatter = new Intl.DateTimeFormat(LOCALE, {
-  timeZone: TIME_ZONE,
-  day: "numeric",
-  month: "numeric",
-  year: "numeric",
-});
+const formatters: Record<Locale, ReturnType<typeof makeFormatters>> = {
+  cs: makeFormatters(localeTags.cs),
+  en: makeFormatters(localeTags.en),
+};
 
-const yearFormatter = new Intl.DateTimeFormat(LOCALE, {
+const yearFormatter = new Intl.DateTimeFormat("en", {
   timeZone: TIME_ZONE,
   year: "numeric",
 });
@@ -48,14 +57,14 @@ export function toIso(value: unknown): string {
 
 // --- Formatting ---
 
-/** e.g. "15. 11. 2026 14:30" style, Czech locale, Prague time. */
-export function formatDateTime(iso: string): string {
-  return dateTimeFormatter.format(new Date(iso));
+/** e.g. "15. 11. 2026 14:30" in Czech, "15 Nov 2026, 14:30" in English; Prague time. */
+export function formatDateTime(iso: string, locale: Locale): string {
+  return formatters[locale].dateTime.format(new Date(iso));
 }
 
-/** Date only, e.g. "15. 11. 2026". */
-export function formatDate(iso: string): string {
-  return dateFormatter.format(new Date(iso));
+/** Date only, e.g. "15. 11. 2026" or "15/11/2026". */
+export function formatDate(iso: string, locale: Locale): string {
+  return formatters[locale].date.format(new Date(iso));
 }
 
 /** Current year in Prague time. */

@@ -11,15 +11,14 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useDictionary } from "@/components/i18n-provider";
 import {
   applyTheme,
   readThemeColors,
   resetTheme,
   restoreTheme,
   saveTheme,
-  themeColorNames,
   themeColors,
-  themePresetNames,
   themePresets,
   type ThemeColor,
   type ThemeColors,
@@ -75,13 +74,14 @@ export function ThemePicker({
 /** A palette button with the picker, for when there's no user menu to open it from. */
 export function ThemePickerButton() {
   const [open, setOpen] = useState(false);
+  const t = useDictionary().theme;
 
   return (
     <ThemePicker
       open={open}
       onOpenChange={setOpen}
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label="Colors">
+        <Button variant="ghost" size="icon-sm" aria-label={t.button}>
           <Palette />
         </Button>
       }
@@ -97,6 +97,7 @@ function ThemePickerPanel({
   onCancel: () => void;
   onApplied: () => void;
 }) {
+  const t = useDictionary().theme;
   const [colors, setColors] = useState<ThemeColors>(readThemeColors);
   const applying = useRef(false);
 
@@ -124,24 +125,25 @@ function ThemePickerPanel({
     <>
       <div className="flex items-start gap-3">
         <div className="flex flex-1 flex-col gap-1">
-          <PopoverTitle className="text-lg">Site colors</PopoverTitle>
-          <PopoverDescription>
-            Pick your own colors. They are saved in this browser and shared with
-            the GeekPower website.
-          </PopoverDescription>
+          <PopoverTitle className="text-lg">{t.title}</PopoverTitle>
+          <PopoverDescription>{t.intro}</PopoverDescription>
         </div>
         <Button
           variant="ghost"
           size="icon-sm"
           className="-mt-1 -mr-2"
-          aria-label="Cancel"
+          aria-label={t.cancel}
           onClick={onCancel}
         >
           <X />
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Presets">
+      <div
+        className="grid grid-cols-3 gap-2"
+        role="group"
+        aria-label={t.presetsLabel}
+      >
         {(Object.entries(themePresets) as [ThemePreset, ThemeColors][]).map(
           ([id, preset]) => (
             <button
@@ -162,7 +164,7 @@ function ThemePickerPanel({
                 />
                 <span className="w-1/4" style={{ background: preset.accent }} />
               </span>
-              {themePresetNames[id]}
+              {t.presets[id]}
             </button>
           ),
         )}
@@ -181,7 +183,7 @@ function ThemePickerPanel({
               className="size-8 shrink-0 cursor-pointer rounded-sm border-0 bg-transparent p-0"
             />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-sm">{themeColorNames[color]}</span>
+              <span className="text-sm">{t.colors[color]}</span>
               <span className="font-mono text-xs text-muted-foreground uppercase">
                 {colors[color]}
               </span>
@@ -196,12 +198,12 @@ function ThemePickerPanel({
           className="mr-auto text-muted-foreground"
           onClick={reset}
         >
-          Reset to default
+          {t.reset}
         </Button>
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          {t.cancel}
         </Button>
-        <Button onClick={apply}>Apply</Button>
+        <Button onClick={apply}>{t.apply}</Button>
       </div>
     </>
   );

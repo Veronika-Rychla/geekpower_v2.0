@@ -5,7 +5,10 @@ import remarkFlexibleMarkers from "remark-flexible-markers";
 import remarkGfm from "remark-gfm";
 
 import { remarkCallouts } from "@/lib/mdx/remark-callouts";
-import { remarkLessonComponents } from "@/lib/mdx/remark-lesson-components";
+import {
+  remarkLessonComponents,
+  type LessonMdxMessages,
+} from "@/lib/mdx/remark-lesson-components";
 import { remarkYoutube } from "@/components/blog/markdown/remark-youtube";
 import type { QuizDefinition } from "@/lib/quizzes";
 
@@ -19,14 +22,17 @@ import type { QuizDefinition } from "@/lib/quizzes";
 
 type MdxOptions = NonNullable<NonNullable<Parameters<typeof serialize>[1]>["mdxOptions"]>;
 
-export function lessonMdxOptions(onQuizzes?: (quizzes: QuizDefinition[]) => void): MdxOptions {
+export function lessonMdxOptions(
+  onQuizzes?: (quizzes: QuizDefinition[]) => void,
+  messages?: LessonMdxMessages,
+): MdxOptions {
   return {
     remarkPlugins: [
       remarkGfm,
       remarkFlexibleMarkers,
       remarkCallouts,
       remarkYoutube,
-      [remarkLessonComponents, { onQuizzes }],
+      [remarkLessonComponents, { onQuizzes, messages }],
     ],
   };
 }
@@ -55,12 +61,18 @@ function describeError(error: unknown): string {
 
 type CompileResult = { compiledSource: string; quizzes: QuizDefinition[] } | { error: string };
 
-/** Compiles for the browser (`MDXRemote` from "next-mdx-remote"), or returns a readable error. */
-export async function compileLessonSource(source: string): Promise<CompileResult> {
+/**
+ * Compiles for the browser (`MDXRemote` from "next-mdx-remote"), or returns a
+ * readable error, worded in `messages` (the editor's language) when given.
+ */
+export async function compileLessonSource(
+  source: string,
+  messages?: LessonMdxMessages,
+): Promise<CompileResult> {
   const collector = createQuizCollector();
   try {
     const { compiledSource } = await serialize(source, {
-      mdxOptions: lessonMdxOptions(collector.onQuizzes),
+      mdxOptions: lessonMdxOptions(collector.onQuizzes, messages),
       blockJS: true,
     });
     return { compiledSource, quizzes: collector.quizzes };

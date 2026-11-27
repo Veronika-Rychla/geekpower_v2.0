@@ -1,5 +1,6 @@
 import type { AnnouncementType, AnnouncementView } from "@/lib/types";
 import { formatDateTime } from "@/lib/dates";
+import { getDictionary, getLocale } from "@/lib/dictionary";
 import { cn } from "@/lib/utils";
 import { AnnouncementDialog } from "@/components/announcements/announcement-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";
@@ -16,9 +17,11 @@ interface AnnouncementListProps {
   canManage?: boolean;
 }
 
-export function AnnouncementList({ announcements, canManage = false }: AnnouncementListProps) {
+export async function AnnouncementList({ announcements, canManage = false }: AnnouncementListProps) {
+  const [{ announcements: t, common }, locale] = await Promise.all([getDictionary(), getLocale()]);
+
   if (announcements.length === 0) {
-    return <p className="text-sm text-muted-foreground">No announcements yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t.empty}</p>;
   }
 
   return (
@@ -34,7 +37,7 @@ export function AnnouncementList({ announcements, canManage = false }: Announcem
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col items-start gap-1">
               <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", TYPE_STYLES[announcement.type].badge)}>
-                {announcement.type}
+                {t.types[announcement.type]}
               </span>
               <h3 className="font-medium">{announcement.title}</h3>
             </div>
@@ -42,7 +45,7 @@ export function AnnouncementList({ announcements, canManage = false }: Announcem
               <div className="-mt-1 flex shrink-0 gap-1">
                 <AnnouncementDialog announcement={announcement} />
                 <DeleteDialog
-                  itemLabel="announcement"
+                  item="announcement"
                   title={announcement.title}
                   onDelete={deleteAnnouncement.bind(null, announcement.guid)}
                 />
@@ -51,8 +54,8 @@ export function AnnouncementList({ announcements, canManage = false }: Announcem
           </div>
           <p className="whitespace-pre-wrap text-muted-foreground">{announcement.body}</p>
           <p className="text-right text-xs text-muted-foreground">
-            {announcement.authorName} · {formatDateTime(announcement.createdAt)}
-            {announcement.updatedAt && " (edited)"}
+            {announcement.authorName} · {formatDateTime(announcement.createdAt, locale)}
+            {announcement.updatedAt && common.edited}
           </p>
         </li>
       ))}

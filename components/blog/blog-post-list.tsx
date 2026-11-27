@@ -3,6 +3,8 @@ import { Plus } from "lucide-react";
 
 import type { BlogMessage } from "@/lib/types";
 import { formatDateTime } from "@/lib/dates";
+import { getDictionary, getLocale } from "@/lib/dictionary";
+import { fill } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BlogPostActions } from "@/components/blog/blog-post-actions";
 import { BlogPostBadges } from "@/components/blog/blog-post-badges";
@@ -15,9 +17,17 @@ interface BlogPostListProps {
   canManage?: boolean;
 }
 
-export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
+export async function BlogPostList({
+  posts,
+  canManage = false,
+}: BlogPostListProps) {
+  const [{ blog: t, common }, locale] = await Promise.all([
+    getDictionary(),
+    getLocale(),
+  ]);
+
   if (posts.length === 0) {
-    return <p className="text-sm text-muted-foreground">No blog posts yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t.empty}</p>;
   }
 
   return (
@@ -54,11 +64,11 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
           </p>
           <details className="group">
             <summary className="cursor-pointer text-sm font-medium text-primary select-none">
-              <span className="group-open:hidden">Read more</span>
-              <span className="hidden group-open:inline">Show less</span>
+              <span className="group-open:hidden">{t.readMore}</span>
+              <span className="hidden group-open:inline">{t.showLess}</span>
               <span className="text-muted-foreground">
                 {" "}
-                · {post.readTime} min read
+                · {fill(common.minRead, { minutes: post.readTime })}
               </span>
             </summary>
             <div className="prose prose-sm prose-invert mt-2 max-w-none">
@@ -66,8 +76,8 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
             </div>
           </details>
           <p className="text-right text-xs text-muted-foreground">
-            {post.authorName} · {formatDateTime(post.createdAt)}
-            {post.updatedAt && " (edited)"}
+            {post.authorName} · {formatDateTime(post.createdAt, locale)}
+            {post.updatedAt && common.edited}
           </p>
         </li>
       ))}
@@ -76,11 +86,13 @@ export function BlogPostList({ posts, canManage = false }: BlogPostListProps) {
 }
 
 /** "New" button for the dashboard's Blog section; opens the full-page editor. */
-export function NewBlogPostLink() {
+export async function NewBlogPostLink() {
+  const t = (await getDictionary()).common;
+
   return (
     <Link href="/blog/new" className={buttonVariants({ size: "sm" })}>
       <Plus className="size-3.5" />
-      New
+      {t.new}
     </Link>
   );
 }

@@ -4,8 +4,13 @@
 // applies on app.geekpower.cz and the other way round. Keep the cookie name,
 // its format, the color list and the presets in sync with the website.
 //
+// The cookie itself is written by lib/shared-cookie.ts. Preset and color
+// names are translated in messages/*.json (`theme`).
+//
 // The defaults live in app/globals.css as `--theme-*` variables. A saved theme
 // overrides them inline on <html>, and the shadcn tokens are derived from them.
+
+import { writeSharedCookie } from "@/lib/shared-cookie";
 
 /** `<bg>-<surface>-<text>-<accent>-<neutral>-<section-glow>`, hex without `#`. */
 export const themeCookie = "gp-theme";
@@ -196,39 +201,6 @@ export const themePresets = {
 } satisfies Record<string, ThemeColors>;
 export type ThemePreset = keyof typeof themePresets;
 
-export const themePresetNames: Record<ThemePreset, string> = {
-  amethyst: "Amethyst",
-  violet: "Violet",
-  royal: "Royal",
-  indigo: "Indigo",
-  iris: "Iris",
-  wisteria: "Wisteria",
-  neon: "Neon",
-  orchid: "Orchid",
-  dusk: "Dusk",
-  plum: "Plum",
-  eggplant: "Eggplant",
-  mauve: "Mauve",
-  midnight: "Midnight",
-  ultraviolet: "Ultraviolet",
-  nebula: "Nebula",
-  obsidian: "Obsidian",
-  galaxy: "Galaxy",
-  velvet: "Velvet",
-  lavender: "Lavender",
-  lilac: "Lilac",
-  heather: "Heather",
-};
-
-export const themeColorNames: Record<ThemeColor, string> = {
-  bg: "Background",
-  surface: "Surface",
-  text: "Text",
-  accent: "Accent",
-  neutral: "Neutral",
-  "section-glow": "Glow",
-};
-
 // paintTheme, readThemeCookie and themeVars must not reference anything
 // outside themselves: themeScript inlines their source into <head>.
 
@@ -344,26 +316,8 @@ export function restoreTheme() {
   paintTheme(readThemeCookie(themeCookie), themeVars);
 }
 
-/**
- * The domain both sites share (geekpower.cz for app.geekpower.cz), or null on
- * localhost and IPs, where a host-only cookie is already shared across ports.
- */
-function sharedDomain(): string | null {
-  const host = location.hostname;
-  if (!host.includes(".") || /^[\d.]+$/.test(host) || host.includes(":"))
-    return null;
-  return host.split(".").slice(-2).join(".");
-}
-
 function writeThemeCookie(value: string | null) {
-  const secure = location.protocol === "https:" ? "; Secure" : "";
-  const cookie = `${themeCookie}=${value ?? ""}; Path=/; Max-Age=${value ? cookieMaxAge : 0}; SameSite=Lax${secure}`;
-  // Drop any host-only copy, so it can't shadow the shared one.
-  document.cookie = `${themeCookie}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
-  const domain = sharedDomain();
-  if (domain) document.cookie = `${cookie}; Domain=${domain}`;
-  // The browser refuses a public suffix (e.g. a *.netlify.app preview): keep it host-only there.
-  if (value && readThemeCookie(themeCookie) === null) document.cookie = cookie;
+  writeSharedCookie(themeCookie, value, cookieMaxAge);
 }
 
 export function saveTheme(colors: ThemeColors) {

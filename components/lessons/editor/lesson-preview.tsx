@@ -7,6 +7,7 @@ import { TriangleAlert } from "lucide-react";
 import { ChoiceQuizPreview } from "@/components/lessons/quiz/quiz-preview";
 import { QUIZ_PART_COMPONENTS } from "@/components/lessons/quiz/quiz-parts";
 import { previewSublesson } from "@/lib/actions";
+import { useDictionary } from "@/components/i18n-provider";
 
 const PREVIEW_DELAY_MS = 400;
 
@@ -27,6 +28,8 @@ const components = {
  * under the error while the text is broken.
  */
 export function LessonPreview({ source }: { source: string }) {
+  const dictionary = useDictionary();
+  const previewFailed = dictionary.editor.previewFailed;
   const [compiledSource, setCompiledSource] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,14 +46,14 @@ export function LessonPreview({ source }: { source: string }) {
           setError(null);
         }
       } catch {
-        if (!cancelled) setError("The preview couldn't be loaded.");
+        if (!cancelled) setError(previewFailed);
       }
     }, PREVIEW_DELAY_MS);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [source]);
+  }, [source, previewFailed]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,7 +68,7 @@ export function LessonPreview({ source }: { source: string }) {
           <MDXRemote compiledSource={compiledSource} scope={{}} frontmatter={{}} components={components} />
         </div>
       ) : (
-        !error && <p className="text-sm text-muted-foreground">The preview shows up here as you write.</p>
+        !error && <p className="text-sm text-muted-foreground">{dictionary.common.previewEmpty}</p>
       )}
     </div>
   );
