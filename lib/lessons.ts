@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 
 import { sql } from "@/app/database";
-import { toIsoOrNull } from "@/lib/dates";
+import { toIso, toIsoOrNull } from "@/lib/dates";
 import type { Role } from "@/lib/types";
 import { hasTeacherAccess } from "@/lib/utils";
 
@@ -219,14 +219,34 @@ export interface EditableSublesson {
   title: string;
   body: string;
   isDraft: boolean;
+  /** When and by whom the current content was saved. */
+  saved: SavedStamp;
+}
+
+export interface SavedStamp {
+  savedAt: string;
+  /** Null if unknown (saved before history existed, or that user was deleted). */
+  savedBy: string | null;
+}
+
+/** An earlier version of a section; its content is loaded on demand by the `getSublessonVersion` action. */
+export interface SublessonVersionSummary extends SavedStamp {
+  guid: string;
+}
+
+/** The full name from a row that selected `u.first_name, u.last_name` via a LEFT JOIN. */
+function savedByName(row: Record<string, unknown>): string | null {
+  return row.first_name ? `${row.first_name as string} ${row.last_name as string}` : null;
 }
 
 export async function getEditableSublesson(sublessonGuid: string): Promise<EditableSublesson | null> {
   const [row] = await sql`
     SELECT s.guid, s.slug, s.title, s.body, s.is_draft,
+           COALESCE(s.updated_at, s.created_at) AS saved_at, u.first_name, u.last_name,
            l.guid AS lesson_guid, l.slug AS lesson_slug, l.title AS lesson_title
     FROM content.sublessons s
     JOIN content.lessons l ON l.guid = s.lesson_guid
+    LEFT JOIN users u ON u.guid = s.updated_by
     WHERE s.guid = ${sublessonGuid}
   `;
   if (!row) {
@@ -239,7 +259,24 @@ export async function getEditableSublesson(sublessonGuid: string): Promise<Edita
     title: row.title as string,
     body: row.body as string,
     isDraft: row.is_draft as boolean,
+    saved: { savedAt: toIso(row.saved_at), savedBy: savedByName(row) },
   };
+}
+
+/** A section's earlier versions, newest first. */
+export async function getSublessonVersions(sublessonGuid: string): Promise<SublessonVersionSummary[]> {
+  const rows = await sql`
+    SELECT v.guid, v.saved_at, u.first_name, u.last_name
+    FROM content.sublesson_versions v
+    LEFT JOIN users u ON u.guid = v.saved_by
+    WHERE v.sublesson_guid = ${sublessonGuid}
+    ORDER BY v.saved_at DESC
+  `;
+  return rows.map((row) => ({
+    guid: row.guid as string,
+    savedAt: toIso(row.saved_at),
+    savedBy: savedByName(row),
+  }));
 }
 
 // --- Students (teacher views) ---

@@ -43,6 +43,8 @@ const PASSWORD_MIN_LENGTH = 8;
 const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200;
 const CONTENT_TITLE_MAX_LENGTH = 200;
 const SUBLESSON_BODY_MAX_LENGTH = 200_000;
+/** How many earlier versions of each section content.sublesson_versions keeps. */
+const SUBLESSON_VERSIONS_KEPT = 10;
 
 // Action arguments come straight from the client, so TypeScript types alone guarantee nothing.
 const guidSchema = z.string().min(1).max(64);
@@ -397,7 +399,7 @@ export async function createSublesson(
   lessonGuidInput: string,
   input: SublessonInput,
 ): Promise<ContentResult> {
-  await requireTeacher();
+  const teacher = await requireTeacher();
   const lessonGuid = parseOrThrow(guidSchema, lessonGuidInput);
   const parsed = await parseSublessonInput(input);
   if ("error" in parsed) return parsed;
@@ -406,9 +408,10 @@ export async function createSublesson(
   let lessonSlug: string;
   try {
     const [row] = await sql`
-      INSERT INTO content.sublessons (lesson_guid, slug, title, body, is_draft, position)
+      INSERT INTO content.sublessons (lesson_guid, slug, title, body, is_draft, position, updated_by)
       SELECT l.guid, ${slug}, ${title}, ${body}, ${isDraft},
-             (SELECT COALESCE(MAX(position), 0) + 1 FROM content.sublessons WHERE lesson_guid = l.guid)
+             (SELECT COALESCE(MAX(position), 0) + 1 FROM content.sublessons WHERE lesson_guid = l.guid),
+             ${teacher.guid}
       FROM content.lessons l
       WHERE l.guid = ${lessonGuid}
       RETURNING (SELECT slug FROM content.lessons WHERE guid = ${lessonGuid}) AS lesson_slug
@@ -427,11 +430,16 @@ export async function createSublesson(
   return { success: true, href: `/lessons/${lessonSlug}/${slug}` };
 }
 
+/**
+ * Saves a section. When the title or body changes, the content being replaced is
+ * first copied to content.sublesson_versions (the CTE sees the row as it was before
+ * the UPDATE), then versions beyond the newest SUBLESSON_VERSIONS_KEPT are dropped.
+ */
 export async function updateSublesson(
   guidInput: string,
   input: SublessonInput,
 ): Promise<ContentResult> {
-  await requireTeacher();
+  const teacher = await requireTeacher();
   const guid = parseOrThrow(guidSchema, guidInput);
   const parsed = await parseSublessonInput(input);
   if ("error" in parsed) return parsed;
@@ -439,13 +447,33 @@ export async function updateSublesson(
 
   let lessonSlug: string;
   try {
-    const [row] = await sql`
-      UPDATE content.sublessons s
-      SET slug = ${slug}, title = ${title}, body = ${body}, is_draft = ${isDraft}, updated_at = now()
-      FROM content.lessons l
-      WHERE s.guid = ${guid} AND l.guid = s.lesson_guid
-      RETURNING l.slug AS lesson_slug
-    `;
+    const [updated] = await sql.transaction([
+      sql`
+        WITH snapshot AS (
+          INSERT INTO content.sublesson_versions (sublesson_guid, title, body, saved_at, saved_by)
+          SELECT guid, title, body, COALESCE(updated_at, created_at), updated_by
+          FROM content.sublessons
+          WHERE guid = ${guid} AND (title, body) IS DISTINCT FROM (${title}::text, ${body}::text)
+        )
+        UPDATE content.sublessons s
+        SET slug = ${slug}, title = ${title}, body = ${body}, is_draft = ${isDraft},
+            updated_at = now(), updated_by = ${teacher.guid}
+        FROM content.lessons l
+        WHERE s.guid = ${guid} AND l.guid = s.lesson_guid
+        RETURNING l.slug AS lesson_slug
+      `,
+      sql`
+        DELETE FROM content.sublesson_versions
+        WHERE sublesson_guid = ${guid}
+          AND guid NOT IN (
+            SELECT guid FROM content.sublesson_versions
+            WHERE sublesson_guid = ${guid}
+            ORDER BY saved_at DESC
+            LIMIT ${SUBLESSON_VERSIONS_KEPT}
+          )
+      `,
+    ]);
+    const [row] = updated;
     if (!row) throw new Error("Not found");
     lessonSlug = row.lesson_slug as string;
   } catch (error) {
@@ -458,6 +486,19 @@ export async function updateSublesson(
 
   revalidateLessonContent();
   return { success: true, href: `/lessons/${lessonSlug}/${slug}` };
+}
+
+/** An earlier version's content, for the section editor to load in place of the current one. */
+export async function getSublessonVersion(
+  versionGuidInput: string,
+): Promise<{ title: string; body: string } | null> {
+  await requireTeacher();
+  const versionGuid = parseOrThrow(guidSchema, versionGuidInput);
+
+  const [row] = await sql`
+    SELECT title, body FROM content.sublesson_versions WHERE guid = ${versionGuid}
+  `;
+  return row ? { title: row.title as string, body: row.body as string } : null;
 }
 
 /** Deletes the section and every student's progress in it (FK cascades). */

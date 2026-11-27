@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/guards";
-import { getEditableSublesson } from "@/lib/lessons";
+import { getEditableSublesson, getSublessonVersions } from "@/lib/lessons";
 import { hasTeacherAccess, isGuid } from "@/lib/utils";
 import { SublessonEditor } from "@/components/lessons/editor/sublesson-editor";
 
@@ -16,7 +16,13 @@ export default async function EditSublessonPage({ params }: PageProps<"/lesson-e
 
   const { sublessonGuid } = await params;
   // A malformed guid would make Postgres throw instead of finding nothing
-  const sublesson = isGuid(sublessonGuid) ? await getEditableSublesson(sublessonGuid) : null;
+  if (!isGuid(sublessonGuid)) {
+    notFound();
+  }
+  const [sublesson, versions] = await Promise.all([
+    getEditableSublesson(sublessonGuid),
+    getSublessonVersions(sublessonGuid),
+  ]);
   if (!sublesson) {
     notFound();
   }
@@ -31,6 +37,7 @@ export default async function EditSublessonPage({ params }: PageProps<"/lesson-e
         body: sublesson.body,
         isDraft: sublesson.isDraft,
       }}
+      history={{ current: sublesson.saved, versions }}
     />
   );
 }

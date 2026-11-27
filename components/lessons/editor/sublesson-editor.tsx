@@ -16,8 +16,11 @@ import {
 } from "@/components/markdown-editor/editor-chrome";
 import { LessonPreview } from "@/components/lessons/editor/lesson-preview";
 import { QuizToolbarButton } from "@/components/lessons/editor/quiz-dialog";
+import { VersionHistoryMenu } from "@/components/lessons/editor/version-history-menu";
 import { SlugField, slugRules } from "@/components/lessons/manage/lesson-dialog";
-import { createSublesson, updateSublesson } from "@/lib/actions";
+import { createSublesson, getSublessonVersion, updateSublesson } from "@/lib/actions";
+import { formatDateTime } from "@/lib/dates";
+import type { SavedStamp, SublessonVersionSummary } from "@/lib/lessons";
 import { slugify } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 
@@ -32,15 +35,26 @@ interface SublessonEditorProps {
   lesson: { guid: string; slug: string; title: string };
   /** When set, the editor updates this section; otherwise it creates a new one in `lesson`. */
   sublesson?: { guid: string } & SublessonFields;
+  /** The section's saved versions, for the History menu (existing sections only). */
+  history?: { current: SavedStamp; versions: SublessonVersionSummary[] };
 }
 
 /** Full-page editor for one lesson section: MDX on the left, live preview on the right. */
-export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
+export function SublessonEditor({ lesson, sublesson, history }: SublessonEditorProps) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
   const [mobileView, setMobileView] = useState<EditorView>("write");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  /** The earlier version loaded into the form, or null while editing the current one. */
+  const [loadedVersion, setLoadedVersion] = useState<SublessonVersionSummary | null>(null);
+  const [isLoadingVersion, setIsLoadingVersion] = useState(false);
+  /**
+   * Whether the name in URL was typed by hand, so a new section's slug stops following the title.
+   * Tracked here because getFieldState("slug").isDirty can't tell: subscribing to formState.isDirty
+   * makes react-hook-form recompute every field's dirty flag, so the copied slug counts as dirty.
+   */
+  const [slugEdited, setSlugEdited] = useState(false);
 
   const {
     register,
@@ -48,7 +62,7 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
     control,
     getValues,
     setValue,
-    getFieldState,
+    reset,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<SublessonFields>({
     defaultValues: sublesson ?? { title: "", slug: "", body: "", isDraft: true },
@@ -78,6 +92,34 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
     router.push(result.href);
   }
 
+  async function loadVersion(version: SublessonVersionSummary) {
+    if (isDirty && !window.confirm("Replace your unsaved changes with this version?")) {
+      return;
+    }
+    setFormError(null);
+    setIsLoadingVersion(true);
+    const content = await getSublessonVersion(version.guid);
+    setIsLoadingVersion(false);
+    if (!content) {
+      setFormError("This version no longer exists.");
+      return;
+    }
+    // Start from the saved section so other unsaved edits (name in URL, draft) don't linger
+    reset();
+    setValue("title", content.title, { shouldDirty: true });
+    setValue("body", content.body, { shouldDirty: true });
+    setLoadedVersion(version);
+  }
+
+  function loadCurrent() {
+    if (isDirty && !window.confirm("Discard unsaved changes?")) {
+      return;
+    }
+    setFormError(null);
+    reset();
+    setLoadedVersion(null);
+  }
+
   function onKeyDown(event: KeyboardEvent<HTMLFormElement>) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
@@ -97,6 +139,16 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
           <h1 className="text-xl font-semibold">{sublesson ? "Edit section" : "New section"}</h1>
         </div>
         <div className="flex items-center gap-3">
+          {history && (
+            <VersionHistoryMenu
+              current={history.current}
+              versions={history.versions}
+              loadedGuid={loadedVersion?.guid ?? null}
+              disabled={isLoadingVersion || isSubmitting}
+              onSelectCurrent={loadCurrent}
+              onSelectVersion={(version) => void loadVersion(version)}
+            />
+          )}
           <label className="flex items-center gap-1.5 text-sm">
             <input type="checkbox" className="size-4 accent-primary" {...register("isDraft")} />
             Draft
@@ -118,6 +170,14 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
         </div>
       </div>
 
+      {loadedVersion && (
+        <p className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm">
+          Showing the version from {formatDateTime(loadedVersion.savedAt)}
+          {loadedVersion.savedBy && ` by ${loadedVersion.savedBy}`}. Save to restore it. The current content will
+          stay in History.
+        </p>
+      )}
+
       {formError && (
         <pre className="rounded-md border border-destructive/50 bg-destructive/10 p-3 font-mono text-xs whitespace-pre-wrap text-destructive">
           {formError}
@@ -135,7 +195,7 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
               maxLength: { value: 200, message: "Title must be at most 200 characters" },
               onChange: (event) => {
                 // A new section's slug follows the title until it's edited by hand
-                if (!sublesson && !getFieldState("slug").isDirty) {
+                if (!sublesson && !slugEdited) {
                   setValue("slug", slugify(event.target.value));
                 }
               },
@@ -152,7 +212,13 @@ export function SublessonEditor({ lesson, sublesson }: SublessonEditorProps) {
           error={errors.slug?.message}
           kind="section"
           warnOnChange={!!sublesson}
-          {...register("slug", slugRules)}
+          {...register("slug", {
+            ...slugRules,
+            // Clearing it lets it follow the title again, like in the lesson dialog
+            onChange: (event) => {
+              setSlugEdited(event.target.value !== "");
+            },
+          })}
         />
       </div>
 

@@ -37,6 +37,19 @@ export interface ContentSublesson {
   is_draft: boolean; // default true
   created_at: Date; // timestamptz
   updated_at: Date | null; // timestamptz
+  updated_by: string | null; // FK users ON DELETE SET NULL; who saved (or created) the current content
+}
+
+// content.sublesson_versions: earlier contents of a section, the newest 10 per section.
+// updateSublesson copies the row here before overwriting it when the title or body changes.
+// INDEX (sublesson_guid, saved_at DESC)
+export interface ContentSublessonVersion {
+  guid: string; // default gen_random_uuid()
+  sublesson_guid: string; // FK content.sublessons ON DELETE CASCADE
+  title: string;
+  body: string;
+  saved_at: Date; // timestamptz; when this content was saved (the section's updated_at, or created_at)
+  saved_by: string | null; // FK users ON DELETE SET NULL
 }
 
 // progress.lessons: a lesson unlocked for a student. PK (user_guid, lesson_guid)
