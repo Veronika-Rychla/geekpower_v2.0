@@ -212,6 +212,7 @@ function SublessonRow({
             itemLabel="section"
             title={sublesson.title}
             description="Every student's progress in it is deleted too."
+            confirmText={`delete ${sublesson.title}`}
             onDelete={deleteSublesson.bind(null, sublesson.guid)}
           />
         </div>
@@ -256,6 +257,7 @@ function LessonCard({
                 itemLabel="lesson"
                 title={lesson.title}
                 description="All its sections and every student's progress in it are deleted too."
+                confirmText={`delete ${lesson.title}`}
                 onDelete={deleteLesson.bind(null, lesson.guid)}
               />
             </div>
