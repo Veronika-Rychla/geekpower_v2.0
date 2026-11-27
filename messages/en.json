@@ -376,6 +376,9 @@
     "setPasswordSubject": "Set your GeekPower password",
     "greeting": "Hi {name},",
     "setPasswordBody": "Click the link below to set your password and access your GeekPower account:",
-    "expires": "This link expires in 24 hours."
+    "expires": "This link expires in 24 hours.",
+    "resetPasswordSubject": "Reset your GeekPower password",
+    "resetPasswordBody": "Someone (probably you) asked to reset the password for your GeekPower account. Click the link below to choose a new one:",
+    "notRequested": "If you didn't ask for this, ignore this email. Your password stays the same."
   }
 }

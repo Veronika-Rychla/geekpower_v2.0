@@ -47,10 +47,15 @@ export function createRateLimiter({
 
 /** The caller's IP as reported by the host (Netlify sets x-nf-client-connection-ip). */
 export function getClientIp(request: Request): string {
+  return clientIpFromHeaders(request.headers);
+}
+
+/** Same as getClientIp, for server actions (pass `await headers()`). */
+export function clientIpFromHeaders(headers: Headers): string {
   return (
-    request.headers.get("x-nf-client-connection-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
+    headers.get("x-nf-client-connection-ip") ??
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    headers.get("x-real-ip") ??
     "unknown"
   );
 }

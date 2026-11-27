@@ -376,6 +376,9 @@
     "setPasswordSubject": "Nastav si heslo do GeekPower",
     "greeting": "Ahoj {name},",
     "setPasswordBody": "Kliknutím na odkaz níže si nastavíš heslo a dostaneš se do svého účtu GeekPower:",
-    "expires": "Odkaz platí 24 hodin."
+    "expires": "Odkaz platí 24 hodin.",
+    "resetPasswordSubject": "Obnovení hesla do GeekPower",
+    "resetPasswordBody": "Někdo (nejspíš ty) požádal o nové heslo k tvému účtu GeekPower. Nové heslo si nastavíš kliknutím na odkaz níže:",
+    "notRequested": "Pokud jsi o nové heslo nežádal(a), tento e-mail ignoruj. Tvoje heslo zůstane beze změny."
   }
 }

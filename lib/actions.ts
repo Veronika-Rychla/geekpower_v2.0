@@ -2,7 +2,9 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { randomUUID, randomBytes } from "node:crypto";
+import { headers } from "next/headers";
+import { after } from "next/server";
+import { createHash, randomUUID, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -14,7 +16,8 @@ import {
   requireUser,
   type CurrentUser,
 } from "@/lib/guards";
-import { sendSetPasswordEmail } from "@/lib/email";
+import { sendSetPasswordEmail, setPasswordLink } from "@/lib/email";
+import { clientIpFromHeaders, createRateLimiter } from "@/lib/rate-limit";
 import { getDictionary, getLocale, type Dictionary } from "@/lib/dictionary";
 import { fill, hasLocale, type Locale } from "@/lib/i18n";
 import { getUserByEmail } from "@/lib/data";
@@ -42,6 +45,15 @@ import {
 import { estimateReadTime } from "@/components/blog/markdown/read-time";
 
 const RESET_TOKEN_TTL_HOURS = 24;
+/** "Forgot password?" requests: a person needs a couple; more is someone spamming an inbox. */
+const checkResetRateLimitByIp = createRateLimiter({
+  limit: 10,
+  windowSeconds: 3600,
+});
+const checkResetRateLimitByEmail = createRateLimiter({
+  limit: 3,
+  windowSeconds: 3600,
+});
 const PASSWORD_MIN_LENGTH = 8;
 const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200;
 const CONTENT_TITLE_MAX_LENGTH = 200;
@@ -98,7 +110,7 @@ function userSchema(e: ErrorMessages) {
   return z.object({
     firstName: z.string().trim().min(1, e.firstNameRequired).max(100),
     lastName: z.string().trim().min(1, e.lastNameRequired).max(100),
-    email: z.email(e.emailInvalid).trim().max(254),
+    email: z.email(e.emailInvalid).trim().toLowerCase().max(254),
     status: z.enum(["Active", "Inactive"]),
   });
 }
@@ -175,15 +187,25 @@ function parseForForm<T>(
     : { error: result.error.issues[0].message };
 }
 
-/** Issues a fresh set-password token for a user, replacing any outstanding one. */
+/**
+ * The DB keeps only a SHA-256 of each token, so a leaked table can't be used
+ * to set anyone's password. The raw token exists only in the emailed link.
+ */
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/** Issues a fresh set-password token for a user, replacing any outstanding one. Returns the raw token. */
 async function createPasswordResetToken(userGuid: string): Promise<string> {
   const token = randomBytes(32).toString("hex");
 
-  await sql`DELETE FROM password_reset_tokens WHERE user_guid = ${userGuid}`;
-  await sql`
-    INSERT INTO password_reset_tokens (token, user_guid, expires_at)
-    VALUES (${token}, ${userGuid}, now() + make_interval(hours => ${RESET_TOKEN_TTL_HOURS}))
-  `;
+  await sql.transaction([
+    sql`DELETE FROM password_reset_tokens WHERE user_guid = ${userGuid} OR expires_at <= now()`,
+    sql`
+      INSERT INTO password_reset_tokens (token, user_guid, expires_at)
+      VALUES (${hashResetToken(token)}, ${userGuid}, now() + make_interval(hours => ${RESET_TOKEN_TTL_HOURS}))
+    `,
+  ]);
 
   return token;
 }
@@ -399,10 +421,7 @@ export async function previewSublesson(
     sourceInput,
   );
 
-  const result = await compileLessonSource(
-    source,
-    (await getDictionary()).mdx,
-  );
+  const result = await compileLessonSource(source, (await getDictionary()).mdx);
   return "error" in result ? result : { compiledSource: result.compiledSource };
 }
 
@@ -663,35 +682,54 @@ export async function createStudent(input: {
       data.firstName,
       token,
       await getLocale(),
+      "invite",
     );
   } catch (error) {
     // Don't fail student creation over a flaky/unconfigured email provider — the
     // student record and a valid token both exist; log the link so it can be
     // shared manually while the issue is sorted out.
     console.error(`Failed to send set-password email to ${data.email}:`, error);
-    console.error(
-      `Set-password link: ${process.env.APP_URL ?? "http://localhost:3000"}/set-password?token=${token}`,
-    );
+    console.error(`Set-password link: ${setPasswordLink(token)}`);
   }
 
   revalidatePath("/students");
   return { guid };
 }
 
-/** Student-facing "forgot password" flow. Always reports success so we don't leak which emails are registered. */
+/**
+ * "Forgot password?" flow. Always reports success, and does the lookup and
+ * sending after the response, so neither the answer nor its timing reveals
+ * which emails are registered.
+ */
 export async function requestPasswordReset(
   emailInput: string,
 ): Promise<{ success: true }> {
-  const email = z.email().safeParse(emailInput);
-  const user = email.success ? await getUserByEmail(email.data) : null;
-  if (user) {
+  const email = z.email().trim().toLowerCase().max(254).safeParse(emailInput);
+  if (!email.success) return { success: true };
+
+  const ip = clientIpFromHeaders(await headers());
+  // Check both, so one doesn't skip counting the other.
+  const byIp = checkResetRateLimitByIp(ip).allowed;
+  const byEmail = checkResetRateLimitByEmail(email.data).allowed;
+  if (!byIp || !byEmail) {
+    console.warn(`Password reset rate-limited (ip ${ip}, email ${email.data})`);
+    return { success: true };
+  }
+
+  const fallbackLocale = await getLocale();
+  after(async () => {
+    const user = await getUserByEmail(email.data);
+    // Inactive users can't log in, so a new password would be no use to them.
+    if (!user || user.status !== "Active") return;
+
     const token = await createPasswordResetToken(user.guid);
     try {
       await sendSetPasswordEmail(
         user.email,
         user.first_name,
         token,
-        user.locale ?? (await getLocale()),
+        hasLocale(user.locale) ? user.locale : fallbackLocale,
+        "reset",
       );
     } catch (error) {
       console.error(
@@ -699,7 +737,7 @@ export async function requestPasswordReset(
         error,
       );
     }
-  }
+  });
 
   return { success: true };
 }
@@ -726,7 +764,7 @@ export async function setPassword(
   // Consuming the token in the same statement that checks it means it can only be used once.
   const [row] = await sql`
     DELETE FROM password_reset_tokens
-    WHERE token = ${token} AND expires_at > now()
+    WHERE token = ${hashResetToken(token)} AND expires_at > now()
     RETURNING user_guid
   `;
   if (!row) {
